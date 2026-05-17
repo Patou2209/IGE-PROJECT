@@ -216,8 +216,14 @@
 
     if (burger && sidebar) {
       burger.addEventListener("click", () => {
-        sidebar.classList.add("open");
-        if (overlay) overlay.classList.add("show");
+        // Mobile/tablette : drawer + overlay
+        // Desktop (>1024px) : toggle collapse/expand de la sidebar en place
+        if (window.innerWidth <= 1024) {
+          sidebar.classList.add("open");
+          if (overlay) overlay.classList.add("show");
+        } else {
+          sidebar.classList.toggle("collapsed");
+        }
       });
     }
     if (overlay && sidebar) {
@@ -226,11 +232,13 @@
         overlay.classList.remove("show");
       });
     }
-    if (sidebarToggle && sidebar) {
-      sidebarToggle.addEventListener("click", () => {
-        sidebar.classList.toggle("collapsed");
-      });
-    }
+    // Si la fenêtre passe de mobile à desktop, on referme le drawer proprement
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 1024) {
+        sidebar.classList.remove("open");
+        if (overlay) overlay.classList.remove("show");
+      }
+    });
   }
   
   function populateCycleSelect() {
@@ -714,42 +722,58 @@
   }
 
   // ==================== RAPPORTS (UI) ====================
+  // Règle de visibilité par cycle :
+  //   - currentEcoleCycle === "maternelle"  → uniquement le tableau Maternelle
+  //   - currentEcoleCycle === "primaire"    → uniquement le tableau Primaire
+  //   - currentEcoleCycle === "secondaire"  → CTEB + Cycle Long + Cycle Court
+  //   - currentEcoleCycle === "" ou null    → tous les tableaux (école multi-cycles)
   function renderReports(stats) {
     const container = document.getElementById("reports-container");
     if (!container) return;
 
     const d = getStatsDetaillees();
+    const cycle = currentEcoleCycle || "";
 
     const thStyle = 'border:1px solid #e5e7eb;padding:6px 8px;background:#f3f4f6;text-align:left;';
     const tdStyle = 'border:1px solid #e5e7eb;padding:6px 8px;text-align:left;';
     const sectionStyle = 'font-size:14px;font-weight:bold;background:#eff6ff;padding:6px 10px;border-left:4px solid #2563eb;margin:20px 0 10px;';
 
     let html = '';
+    let sectionNum = 1;
 
-    // MATERNELLE
-    html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">Cycle Maternelle</h3>`;
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
-    html += '</div>';
+    // MATERNELLE — visible si cycle vide (tous) ou maternelle
+    if (cycle === "" || cycle === "maternelle") {
+      html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">${sectionNum++}. Cycle Maternelle</h3>`;
+      html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
+      html += '</div>';
+    }
 
-    // PRIMAIRE
-    html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">Cycle Primaire</h3>`;
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
-    html += '</div>';
+    // PRIMAIRE — visible si cycle vide (tous) ou primaire
+    if (cycle === "" || cycle === "primaire") {
+      html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">${sectionNum++}. Cycle Primaire</h3>`;
+      html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
+      html += '</div>';
+    }
 
-    // CTEB
-    html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">CTEB (7ème & 8ème)</h3>`;
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
-    html += '</div>';
+    // CTEB, CYCLE LONG, CYCLE COURT — visibles si cycle vide (tous) ou secondaire
+    if (cycle === "" || cycle === "secondaire") {
+      html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">${sectionNum++}. CTEB (7ème & 8ème)</h3>`;
+      html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
+      html += '</div>';
 
-    // CYCLE LONG
-    html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">Cycle Long (1ère → 4ème Humanité)</h3>`;
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
-    html += '</div>';
+      html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">${sectionNum++}. Cycle Long (1ère → 4ème Humanité)</h3>`;
+      html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
+      html += '</div>';
 
-    // CYCLE COURT
-    html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">Cycle Court (1ère → 3ème Humanité)</h3>`;
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
-    html += '</div>';
+      html += `<div style="margin-bottom:25px;"><h3 style="${sectionStyle}">${sectionNum++}. Cycle Court (1ère → 3ème Humanité)</h3>`;
+      html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
+      html += '</div>';
+    }
+
+    // Message si aucune section affichée (cas anormal)
+    if (html === '') {
+      html = '<div class="empty">Aucun cycle défini pour cet établissement.</div>';
+    }
 
     container.innerHTML = html;
   }
@@ -906,30 +930,54 @@
     const d = getStatsDetaillees();
 
     const wrapper = document.createElement("div");
-    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:1123px;";
+    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:794px;";
 
     const thStyle = 'border:1px solid #e5e7eb;padding:6px 8px;background:#f3f4f6;text-align:left;';
     const tdStyle = 'border:1px solid #e5e7eb;padding:6px 8px;text-align:left;';
     const sectionStyle = 'font-size:14px;font-weight:bold;background:#eff6ff;padding:6px 10px;border-left:4px solid #2563eb;margin:20px 0 10px;';
 
+    // Titre du rapport + sous-titre cycle pour plus de clarté
+    const cycleLabel = {
+      maternelle: 'École Maternelle',
+      primaire: 'École Primaire',
+      secondaire: 'École Secondaire',
+      '': 'Établissement Multi-Cycles'
+    }[currentEcoleCycle || ''] || 'Établissement scolaire';
+
     let html = "";
-    html += '<div style="font-size:22px;font-weight:bold;color:#1e3a8a;text-align:center;margin-bottom:10px;">RAPPORT STATISTIQUE — ' + escape(nomEntite).toUpperCase() + '</div>';
+    html += '<div style="font-size:22px;font-weight:bold;color:#1e3a8a;text-align:center;margin-bottom:6px;">RAPPORT STATISTIQUE — ' + escape(nomEntite).toUpperCase() + '</div>';
+    html += '<div style="text-align:center;font-size:13px;color:#2563eb;font-weight:600;margin-bottom:6px;">' + cycleLabel + '</div>';
     html += '<div style="text-align:center;color:#4b5563;margin-bottom:30px;">République Démocratique du Congo<br>Ministère de l\'Enseignement Primaire, Secondaire et Technique<br>Date : ' + dateRapport + '</div>';
 
-    html += '<div style="' + sectionStyle + '">1. CYCLE MATERNELLE</div>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
+    // ---- Sections filtrées selon le cycle de l'école ----
+    // Même règle que renderReports() :
+    //   maternelle → section 1 seulement
+    //   primaire   → section 2 seulement
+    //   secondaire → sections 3, 4, 5 seulement
+    //   vide       → toutes les sections
+    const cycleEcole = currentEcoleCycle || "";
+    let sectionNum = 1;
 
-    html += '<div style="' + sectionStyle + '">2. CYCLE PRIMAIRE</div>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
+    if (cycleEcole === "" || cycleEcole === "maternelle") {
+      html += '<div style="' + sectionStyle + '">' + sectionNum++ + '. CYCLE MATERNELLE</div>';
+      html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
+    }
 
-    html += '<div style="' + sectionStyle + '">3. CTEB (7ème & 8ème)</div>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
+    if (cycleEcole === "" || cycleEcole === "primaire") {
+      html += '<div style="' + sectionStyle + '">' + sectionNum++ + '. CYCLE PRIMAIRE</div>';
+      html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
+    }
 
-    html += '<div style="' + sectionStyle + '">4. CYCLE LONG</div>';
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
+    if (cycleEcole === "" || cycleEcole === "secondaire") {
+      html += '<div style="' + sectionStyle + '">' + sectionNum++ + '. CTEB (7ème & 8ème)</div>';
+      html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
 
-    html += '<div style="' + sectionStyle + '">5. CYCLE COURT</div>';
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
+      html += '<div style="' + sectionStyle + '">' + sectionNum++ + '. CYCLE LONG</div>';
+      html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
+
+      html += '<div style="' + sectionStyle + '">' + sectionNum++ + '. CYCLE COURT</div>';
+      html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
+    }
 
     html += '<div style="margin-top:30px;padding-top:15px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-end;">';
     html += '  <div style="width:280px;text-align:center;">';
@@ -950,24 +998,33 @@
       filename:     filename,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    // Conteneur off-screen pour html2canvas
-    wrapper.style.position = "fixed";
-    wrapper.style.left = "-10000px";
+    // Le conteneur doit être dans le DOM ET visible par html2canvas.
+    // Astuce : on l'enveloppe dans un host invisible mais qui reste dans
+    // le flux (sinon html2canvas v1 capture une zone vide → PDF blanc).
+    const host = document.createElement("div");
+    host.setAttribute("aria-hidden", "true");
+    host.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-9999;";
+    wrapper.style.position = "relative";
+    wrapper.style.left = "0";
     wrapper.style.top = "0";
-    document.body.appendChild(wrapper);
+    host.appendChild(wrapper);
+    document.body.appendChild(host);
 
-    window.html2pdf().set(opt).from(wrapper).save().then(() => {
-      if (wrapper.parentNode) document.body.removeChild(wrapper);
-      toast("Rapport PDF généré : " + filename, "success");
-    }).catch((err) => {
-      if (wrapper.parentNode) document.body.removeChild(wrapper);
-      console.error(err);
-      toast("Erreur lors de la génération du PDF", "error");
-    });
+    // Petit délai pour laisser le layout/fonts se stabiliser avant la capture
+    setTimeout(() => {
+      window.html2pdf().set(opt).from(wrapper).save().then(() => {
+        if (host.parentNode) document.body.removeChild(host);
+        toast("Rapport PDF généré : " + filename, "success");
+      }).catch((err) => {
+        if (host.parentNode) document.body.removeChild(host);
+        console.error(err);
+        toast("Erreur lors de la génération du PDF", "error");
+      });
+    }, 100);
   }
   
   function renderEvolutionChart() {
