@@ -930,7 +930,7 @@
     const d = getStatsDetaillees();
 
     const wrapper = document.createElement("div");
-    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:794px;";
+    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:1123px;";
 
     const thStyle = 'border:1px solid #e5e7eb;padding:6px 8px;background:#f3f4f6;text-align:left;';
     const tdStyle = 'border:1px solid #e5e7eb;padding:6px 8px;text-align:left;';
@@ -998,7 +998,7 @@
       filename:     filename,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 

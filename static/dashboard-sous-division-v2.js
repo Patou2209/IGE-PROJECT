@@ -688,7 +688,7 @@
     const d = getStatsDetaillees();
 
     const wrapper = document.createElement("div");
-    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:1123px;";
+    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:1123px";
 
     const thStyle = 'border:1px solid #e5e7eb;padding:6px 8px;background:#f3f4f6;text-align:left;';
     const tdStyle = 'border:1px solid #e5e7eb;padding:6px 8px;text-align:left;';
