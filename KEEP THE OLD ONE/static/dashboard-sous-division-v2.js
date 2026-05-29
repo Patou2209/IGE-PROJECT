@@ -1,6 +1,6 @@
 /* ============================================================
-   EKOLSTAT — Tableau de bord IPP - Version 2.0
-   Responsabilités : Gestion des Sous-Divisions, suivi provincial
+   EKOLSTAT — Tableau de bord Sous-Division - Version 2.0
+   Responsabilités : Gestion des Écoles, suivi de la sous-division
    ============================================================ */
 
 (function() {
@@ -9,10 +9,10 @@
 
   let currentUser = null;
   let currentProfile = null;
+  let currentSdId = null;
   let currentIppId = null;
 
   // État global
-  let sousDivisions = {};
   let ecoles = {};
   let classes = {};
   let effectifs = {};
@@ -20,14 +20,14 @@
   // Graphique
   let evolutionChart = null;
 
-  // Application Firebase secondaire (pour créer des comptes sans déconnecter l'IPP)
+  // Application Firebase secondaire (pour créer des comptes sans déconnecter la SD)
   let secondaryApp = null;
   function getSecondaryAuth() {
     if (!secondaryApp) {
       try {
-        secondaryApp = firebase.initializeApp(firebase.app().options, "ekolstat-create-sd");
+        secondaryApp = firebase.initializeApp(firebase.app().options, "ekolstat-create-ecole");
       } catch (e) {
-        secondaryApp = firebase.app("ekolstat-create-sd");
+        secondaryApp = firebase.app("ekolstat-create-ecole");
       }
     }
     return secondaryApp.auth();
@@ -74,7 +74,7 @@
     }
 
     currentProfile = snap.val();
-    if (currentProfile.role !== "ipp") {
+    if (currentProfile.role !== "sous-division" && currentProfile.role !== "sd") {
       toast("Accès non autorisé", "error");
       await auth.signOut();
       setTimeout(() => window.location.href = "../index.html", 1200);
@@ -82,10 +82,11 @@
     }
 
     currentUser = user;
-    currentIppId = currentProfile.entiteId || currentProfile.ippId || user.uid;
+    currentSdId = currentProfile.entiteId || currentProfile.sdId || user.uid;
+    currentIppId = currentProfile.ippId || "";
 
-    document.getElementById("user-name").textContent = currentProfile.nomEntite || "IPP";
-    document.getElementById("user-role").textContent = "Inspection Principale Provinciale";
+    document.getElementById("user-name").textContent = currentProfile.nomEntite || "Sous-Division";
+    document.getElementById("user-role").textContent = "Sous-Division";
 
     init();
   });
@@ -97,20 +98,14 @@
   }
 
   function loadData() {
-    // Sous-divisions rattachées à cette IPP
-    db.ref("sousDivisions").orderByChild("ippId").equalTo(currentIppId).on("value", (snap) => {
-      sousDivisions = snap.val() || {};
-      renderAll();
-    });
-
-    // Écoles
-    db.ref("ecoles").orderByChild("ippId").equalTo(currentIppId).on("value", (snap) => {
+    // Écoles rattachées à cette SD
+    db.ref("ecoles").orderByChild("sdId").equalTo(currentSdId).on("value", (snap) => {
       ecoles = snap.val() || {};
       renderAll();
     });
 
-    // Classes
-    db.ref("classes").orderByChild("ippId").equalTo(currentIppId).on("value", (snap) => {
+    // Classes (filtre par sdId)
+    db.ref("classes").orderByChild("sdId").equalTo(currentSdId).on("value", (snap) => {
       classes = snap.val() || {};
       renderAll();
     });
@@ -141,7 +136,7 @@
     if (globalSearch) {
       globalSearch.addEventListener("input", function(e) {
         const q = e.target.value.toLowerCase().trim();
-        const rows = document.querySelectorAll("#sd-summary-container tbody tr, #sd-management-container tbody tr");
+        const rows = document.querySelectorAll("#ecole-summary-container tbody tr, #ecole-management-container tbody tr");
         rows.forEach(function(r) {
           if (!q) { r.style.display = ""; return; }
           r.style.display = r.textContent.toLowerCase().includes(q) ? "" : "none";
@@ -164,7 +159,7 @@
 
         const titles = {
           "overview": "Vue d'ensemble",
-          "sous-divisions": "Sous-Divisions",
+          "ecoles": "Écoles",
           "reports": "Rapports"
         };
         const pageTitle = document.getElementById("page-title");
@@ -180,15 +175,15 @@
       });
     });
 
-    // Modal SD
-    const btnNewSd = document.getElementById("btn-new-sd");
-    const formSd = document.getElementById("form-sd");
-    const genPass = document.getElementById("gen-pass");
-    if (btnNewSd) btnNewSd.addEventListener("click", () => openSdModal());
-    if (formSd) formSd.addEventListener("submit", saveSd);
-    if (genPass) {
-      genPass.addEventListener("click", function() {
-        const passInput = document.getElementById("sd-password");
+    // Modal École
+    const btnNewEcole = document.getElementById("btn-new-ecole");
+    const formEcole = document.getElementById("form-ecole");
+    const genPassEcole = document.getElementById("gen-pass-ecole");
+    if (btnNewEcole) btnNewEcole.addEventListener("click", () => openEcoleModal());
+    if (formEcole) formEcole.addEventListener("submit", saveEcole);
+    if (genPassEcole) {
+      genPassEcole.addEventListener("click", function() {
+        const passInput = document.getElementById("ecole-password");
         if (passInput) passInput.value = generatePassword(10);
       });
     }
@@ -237,7 +232,6 @@
   // ==================== AGRÉGATION ====================
   function getStats() {
     const stats = {
-      totalSD: 0,
       totalEcoles: 0,
       ecolesPubliques: 0,
       ecolesPrivees: 0,
@@ -245,24 +239,10 @@
       totalEleves: 0,
       totalFilles: 0,
       totalGarcons: 0,
-      sdStats: {}
+      ecoleStats: {}
     };
 
-    // Compter les SD actives
-    for (const sdId in sousDivisions) {
-      if (!sousDivisions.hasOwnProperty(sdId)) continue;
-      const sd = sousDivisions[sdId];
-      if (sd.statut === "supprime") continue;
-      stats.totalSD++;
-      stats.sdStats[sdId] = {
-        nom: sd.nom,
-        responsable: sd.responsable || "",
-        statut: sd.statut || "actif",
-        ecoles: 0, classes: 0, eleves: 0, filles: 0, garcons: 0
-      };
-    }
-
-    // Écoles
+    // Écoles actives
     for (const ecoleId in ecoles) {
       if (!ecoles.hasOwnProperty(ecoleId)) continue;
       const ecole = ecoles[ecoleId];
@@ -270,9 +250,14 @@
       stats.totalEcoles++;
       if (ecole.categorie === "publique") stats.ecolesPubliques++;
       else if (ecole.categorie === "privee") stats.ecolesPrivees++;
-      if (ecole.sdId && stats.sdStats[ecole.sdId]) {
-        stats.sdStats[ecole.sdId].ecoles++;
-      }
+      stats.ecoleStats[ecoleId] = {
+        nom: ecole.nom,
+        responsable: ecole.responsable || "",
+        cycle: ecole.cycle || "",
+        statut: ecole.statut || "actif",
+        email: ecole.email || "",
+        classes: 0, eleves: 0, filles: 0, garcons: 0
+      };
     }
 
     // Classes + effectifs
@@ -291,11 +276,11 @@
       stats.totalFilles += f;
       stats.totalGarcons += g;
 
-      if (classe.sdId && stats.sdStats[classe.sdId]) {
-        stats.sdStats[classe.sdId].classes++;
-        stats.sdStats[classe.sdId].eleves += total;
-        stats.sdStats[classe.sdId].filles += f;
-        stats.sdStats[classe.sdId].garcons += g;
+      if (classe.ecoleId && stats.ecoleStats[classe.ecoleId]) {
+        stats.ecoleStats[classe.ecoleId].classes++;
+        stats.ecoleStats[classe.ecoleId].eleves += total;
+        stats.ecoleStats[classe.ecoleId].filles += f;
+        stats.ecoleStats[classe.ecoleId].garcons += g;
       }
     }
 
@@ -364,16 +349,16 @@
   function renderAll() {
     const stats = getStats();
     renderKPIs(stats);
-    renderSDSummaryTable(stats);
-    renderSDManagementTable(stats);
+    renderEcoleSummaryTable(stats);
+    renderEcoleManagementTable(stats);
     renderReports(stats);
     if (window.Chart) renderEvolutionChart();
   }
 
   function renderKPIs(stats) {
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmt(val); };
-    set("total-sd", stats.totalSD);
     set("total-ecoles", stats.totalEcoles);
+    set("total-classes", stats.totalClasses);
     set("total-eleves", stats.totalEleves);
     set("total-filles", stats.totalFilles);
     set("total-garcons", stats.totalGarcons);
@@ -381,33 +366,38 @@
     set("ecoles-privees", stats.ecolesPrivees);
   }
 
-  function renderSDSummaryTable(stats) {
-    const container = document.getElementById("sd-summary-container");
+  function renderEcoleSummaryTable(stats) {
+    const container = document.getElementById("ecole-summary-container");
     if (!container) return;
 
-    if (Object.keys(stats.sdStats).length === 0) {
-      container.innerHTML = '<div class="empty">Aucune Sous-Division. Créez-en une dans la section "Sous-Divisions".</div>';
+    if (Object.keys(stats.ecoleStats).length === 0) {
+      container.innerHTML = '<div class="empty">Aucune école. Créez-en une dans la section "Écoles".</div>';
       return;
     }
 
     let html = '<table class="data-table">';
     html += '<thead><tr>';
-    html += '<th>Sous-Division</th>';
+    html += '<th>École</th>';
     html += '<th>Responsable</th>';
-    html += '<th>Écoles</th>';
+    html += '<th>Cycle</th>';
     html += '<th>Classes</th>';
     html += '<th>Filles</th>';
     html += '<th>Garçons</th>';
     html += '<th><strong>Total élèves</strong></th>';
     html += '</tr></thead><tbody>';
 
-    for (const sdId in stats.sdStats) {
-      if (!stats.sdStats.hasOwnProperty(sdId)) continue;
-      const s = stats.sdStats[sdId];
+    for (const ecoleId in stats.ecoleStats) {
+      if (!stats.ecoleStats.hasOwnProperty(ecoleId)) continue;
+      const s = stats.ecoleStats[ecoleId];
+      let cycleLabel = "Tous";
+      if (s.cycle === "maternelle") cycleLabel = "Maternelle";
+      else if (s.cycle === "primaire") cycleLabel = "Primaire";
+      else if (s.cycle === "secondaire") cycleLabel = "Secondaire";
+
       html += '<tr>';
       html += '<td><strong>' + escape(s.nom) + '</strong></td>';
       html += '<td>' + escape(s.responsable || "-") + '</td>';
-      html += '<td>' + fmt(s.ecoles) + '</td>';
+      html += '<td>' + cycleLabel + '</td>';
       html += '<td>' + fmt(s.classes) + '</td>';
       html += '<td>' + fmt(s.filles) + ' (' + pct(s.filles, s.eleves) + ')</td>';
       html += '<td>' + fmt(s.garcons) + ' (' + pct(s.garcons, s.eleves) + ')</td>';
@@ -419,12 +409,12 @@
     container.innerHTML = html;
   }
 
-  function renderSDManagementTable(stats) {
-    const container = document.getElementById("sd-management-container");
+  function renderEcoleManagementTable(stats) {
+    const container = document.getElementById("ecole-management-container");
     if (!container) return;
 
-    if (Object.keys(sousDivisions).length === 0) {
-      container.innerHTML = '<div class="empty">Aucune Sous-Division. Cliquez sur "Nouvelle Sous-Division" pour commencer.</div>';
+    if (Object.keys(ecoles).length === 0) {
+      container.innerHTML = '<div class="empty">Aucune école. Cliquez sur "Nouvelle École" pour commencer.</div>';
       return;
     }
 
@@ -432,35 +422,42 @@
     html += '<thead><tr>';
     html += '<th>Nom</th>';
     html += '<th>Responsable</th>';
+    html += '<th>Cycle</th>';
     html += '<th>Email</th>';
-    html += '<th>Écoles</th>';
+    html += '<th>Classes</th>';
     html += '<th>Statut</th>';
     html += '<th>Actions</th>';
     html += '</tr></thead><tbody>';
 
-    for (const sdId in sousDivisions) {
-      if (!sousDivisions.hasOwnProperty(sdId)) continue;
-      const sd = sousDivisions[sdId];
-      if (sd.statut === "supprime") continue;
+    for (const ecoleId in ecoles) {
+      if (!ecoles.hasOwnProperty(ecoleId)) continue;
+      const ecole = ecoles[ecoleId];
+      if (ecole.statut === "supprime") continue;
 
-      const s = stats.sdStats[sdId] || { ecoles: 0 };
-      const statusBadge = sd.statut === "inactif" ? "badge-muted" : "badge-success";
-      const statusText = sd.statut === "inactif" ? "Inactif" : "Actif";
+      const s = stats.ecoleStats[ecoleId] || { classes: 0 };
+      const statusBadge = ecole.statut === "inactif" ? "badge-muted" : "badge-success";
+      const statusText = ecole.statut === "inactif" ? "Inactif" : "Actif";
+
+      let cycleLabel = "Tous";
+      if (ecole.cycle === "maternelle") cycleLabel = "Maternelle";
+      else if (ecole.cycle === "primaire") cycleLabel = "Primaire";
+      else if (ecole.cycle === "secondaire") cycleLabel = "Secondaire";
 
       html += '<tr>';
-      html += '<td><strong>' + escape(sd.nom) + '</strong></td>';
-      html += '<td>' + escape(sd.responsable || "-") + '</td>';
-      html += '<td>' + escape(sd.email || "-") + '</td>';
-      html += '<td>' + fmt(s.ecoles) + '</td>';
+      html += '<td><strong>' + escape(ecole.nom) + '</strong></td>';
+      html += '<td>' + escape(ecole.responsable || "-") + '</td>';
+      html += '<td>' + cycleLabel + '</td>';
+      html += '<td>' + escape(ecole.email || "-") + '</td>';
+      html += '<td>' + fmt(s.classes) + '</td>';
       html += '<td><span class="badge ' + statusBadge + '">' + statusText + '</span></td>';
       html += '<td>';
       html += '  <div class="row-actions">';
-      html += '    <button class="icon-btn" onclick="editSd(\'' + sdId + '\')" title="Modifier"><i class="fas fa-edit"></i></button>';
-      html += '    <button class="icon-btn" onclick="resetSdPassword(\'' + escape(sd.email || '') + '\', \'' + escape(sd.nom) + '\')" title="Réinitialiser MDP"><i class="fas fa-key"></i></button>';
-      html += '    <button class="icon-btn ' + (sd.statut === "inactif" ? "" : "warning") + '" onclick="toggleSd(\'' + sdId + '\', \'' + (sd.statut || "actif") + '\')" title="' + (sd.statut === "inactif" ? "Réactiver" : "Désactiver") + '">';
-      html += '      <i class="fas ' + (sd.statut === "inactif" ? "fa-circle-play" : "fa-circle-pause") + '"></i>';
+      html += '    <button class="icon-btn" onclick="editEcole(\'' + ecoleId + '\')" title="Modifier"><i class="fas fa-edit"></i></button>';
+      html += '    <button class="icon-btn" onclick="resetEcolePassword(\'' + escape(ecole.email || '') + '\', \'' + escape(ecole.nom) + '\')" title="Réinitialiser MDP"><i class="fas fa-key"></i></button>';
+      html += '    <button class="icon-btn ' + (ecole.statut === "inactif" ? "" : "warning") + '" onclick="toggleEcole(\'' + ecoleId + '\', \'' + (ecole.statut || "actif") + '\')" title="' + (ecole.statut === "inactif" ? "Réactiver" : "Désactiver") + '">';
+      html += '      <i class="fas ' + (ecole.statut === "inactif" ? "fa-circle-play" : "fa-circle-pause") + '"></i>';
       html += '    </button>';
-      html += '    <button class="icon-btn danger" onclick="deleteSd(\'' + sdId + '\', \'' + escape(sd.nom) + '\')" title="Supprimer"><i class="fas fa-trash"></i></button>';
+      html += '    <button class="icon-btn danger" onclick="deleteEcole(\'' + ecoleId + '\', \'' + escape(ecole.nom) + '\')" title="Supprimer"><i class="fas fa-trash"></i></button>';
       html += '  </div>';
       html += '</td>';
       html += '</tr>';
@@ -503,11 +500,11 @@
     html += buildReportTable(['Niveau','Option','Code','Filles','Garçons','<strong>Total</strong>'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
     html += '</div>';
 
-    // Synthèse par Sous-Division
-    html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">Synthèse par Sous-Division</h3>';
+    // Synthèse par École
+    html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">Synthèse par École</h3>';
     html += buildReportTable(
-      ['Sous-Division','Écoles','Classes','Filles','Garçons','<strong>Total</strong>'],
-      buildSDSummaryRows(stats),
+      ['École','Cycle','Classes','Filles','Garçons','<strong>Total</strong>'],
+      buildEcoleSummaryRows(stats),
       thStyle, tdStyle
     );
     html += '</div>';
@@ -613,21 +610,25 @@
     if (rows.length === 0) rows.push(['—','—','—','0','0','<strong>0</strong>']);
     return rows;
   }
-  function buildSDSummaryRows(stats) {
+  function buildEcoleSummaryRows(stats) {
     const rows = [];
-    for (const sdId in stats.sdStats) {
-      if (!stats.sdStats.hasOwnProperty(sdId)) continue;
-      const s = stats.sdStats[sdId];
+    for (const ecoleId in stats.ecoleStats) {
+      if (!stats.ecoleStats.hasOwnProperty(ecoleId)) continue;
+      const s = stats.ecoleStats[ecoleId];
+      let cycleLabel = "Tous";
+      if (s.cycle === "maternelle") cycleLabel = "Maternelle";
+      else if (s.cycle === "primaire") cycleLabel = "Primaire";
+      else if (s.cycle === "secondaire") cycleLabel = "Secondaire";
       rows.push([
         escape(s.nom),
-        fmt(s.ecoles),
+        cycleLabel,
         fmt(s.classes),
         fmt(s.filles) + ' (' + pct(s.filles, s.eleves) + ')',
         fmt(s.garcons) + ' (' + pct(s.garcons, s.eleves) + ')',
         '<strong>' + fmt(s.eleves) + '</strong>'
       ]);
     }
-    if (rows.length === 0) rows.push(['—','0','0','0','0','<strong>0</strong>']);
+    if (rows.length === 0) rows.push(['—','—','0','0','0','<strong>0</strong>']);
     return rows;
   }
 
@@ -647,7 +648,7 @@
 
   // ==================== EXPORT PDF (vrai PDF via html2pdf) ====================
   function buildPdfFilename() {
-    const nomEntite = (currentProfile && currentProfile.nomEntite) ? currentProfile.nomEntite : "IPP";
+    const nomEntite = (currentProfile && currentProfile.nomEntite) ? currentProfile.nomEntite : "SOUS_DIVISION";
     const slug = String(nomEntite)
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^A-Za-z0-9]+/g, "_")
@@ -667,7 +668,7 @@
 
     toast("Préparation du rapport PDF...", "info");
 
-    const nomEntite = (currentProfile && currentProfile.nomEntite) || "Inspection Principale Provinciale";
+    const nomEntite = (currentProfile && currentProfile.nomEntite) || "Sous-Division";
     const responsable = (currentProfile && currentProfile.responsable) || "Non spécifié";
     const now = new Date();
     const dateRapport = now.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -688,7 +689,7 @@
 
     // En-tête officiel
     html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #2563eb;">';
-    html += '  <img src="../img/logo min backless.png" alt="RDC Ministère" style="height:120px;object-fit:contain;" />';
+    html += '  <img src="../img/logo min backless.png" alt="RDC Ministère" style="height:80px;object-fit:contain;" />';
     html += '  <div style="text-align:center;flex:1;padding:0 20px;">';
     html += '    <div style="font-size:11px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.5px;">REPUBLIQUE DEMOCRATIQUE DU CONGO</div>';
     html += '    <div style="font-size:10px;color:#374151;margin-top:2px;">MINISTERE DE L\'EDUCATION NATIONALE ET NOUVELLE CITOYENNETE</div>';
@@ -704,7 +705,6 @@
     html += '<thead><tr>';
     html += '<th style="' + thStyle + '">Indicateur</th><th style="' + thStyle + '">Valeur</th>';
     html += '</tr></thead><tbody>';
-    html += '<tr><td style="' + tdStyle + '">Sous-Divisions</td><td style="' + tdStyle + '">' + fmt(stats.totalSD) + '</td></tr>';
     html += '<tr><td style="' + tdStyle + '">Écoles</td><td style="' + tdStyle + '">' + fmt(stats.totalEcoles) + '</td></tr>';
     html += '<tr><td style="' + tdStyle + '">Classes</td><td style="' + tdStyle + '">' + fmt(stats.totalClasses) + '</td></tr>';
     html += '<tr><td style="' + tdStyle + '">Total élèves</td><td style="' + tdStyle + '"><strong>' + fmt(stats.totalEleves) + '</strong></td></tr>';
@@ -727,10 +727,10 @@
     html += '<div style="' + sectionStyle + '">6. CYCLE COURT</div>';
     html += buildReportTable(['Niveau','Option','Code','Filles','Garçons','<strong>Total</strong>'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
 
-    html += '<div style="' + sectionStyle + '">7. SYNTHÈSE PAR SOUS-DIVISION</div>';
+    html += '<div style="' + sectionStyle + '">7. SYNTHÈSE PAR ÉCOLE</div>';
     html += buildReportTable(
-      ['Sous-Division','Écoles','Classes','Filles','Garçons','<strong>Total</strong>'],
-      buildSDSummaryRows(stats),
+      ['École','Cycle','Classes','Filles','Garçons','<strong>Total</strong>'],
+      buildEcoleSummaryRows(stats),
       thStyle, tdStyle
     );
 
@@ -739,7 +739,7 @@
     html += '  <div style="width:280px;text-align:center;">';
     html += '    <div style="font-size:11px;">Fait à Kinshasa, le ' + dateRapport + '</div>';
     html += '    <div style="margin-top:50px;border-top:1px solid #000;width:100%;"></div>';
-    html += '    <div style="margin-top:6px;font-size:11px;">L\'Inspecteur Principal Provincial</div>';
+    html += '    <div style="margin-top:6px;font-size:11px;">Le Chef de Sous-Division</div>';
     html += '    <div style="font-size:12px;font-weight:bold;">' + escape(responsable) + '</div>';
     html += '  </div>';
     html += '  <div style="text-align:center;font-size:9px;color:#6b7280;">';
@@ -842,90 +842,112 @@
     });
   }
 
-  // ==================== SOUS-DIVISION CRUD ====================
-  function openSdModal(id = null) {
-    const modal = document.getElementById("modal-sd");
+  // ==================== ÉCOLE CRUD ====================
+  function openEcoleModal(id = null) {
+    const modal = document.getElementById("modal-ecole");
     if (!modal) return;
 
-    const sdIdInput = document.getElementById("sd-id");
-    const nomInput = document.getElementById("sd-nom");
-    const respInput = document.getElementById("sd-responsable");
-    const emailInput = document.getElementById("sd-email");
-    const passwordInput = document.getElementById("sd-password");
+    const ecoleIdInput = document.getElementById("ecole-id");
+    const nomInput = document.getElementById("ecole-nom");
+    const respInput = document.getElementById("ecole-responsable");
+    const cycleSelect = document.getElementById("ecole-cycle");
+    const categorieSelect = document.getElementById("ecole-categorie");
+    const emailInput = document.getElementById("ecole-email");
+    const passwordInput = document.getElementById("ecole-password");
     const passwordField = document.getElementById("field-password");
-    const modalTitle = document.getElementById("modal-sd-title");
+    const modalTitle = document.getElementById("modal-ecole-title");
 
-    if (id && sousDivisions[id]) {
-      const sd = sousDivisions[id];
-      if (sdIdInput) sdIdInput.value = id;
-      if (nomInput) nomInput.value = sd.nom || "";
-      if (respInput) respInput.value = sd.responsable || "";
+    if (id && ecoles[id]) {
+      const ecole = ecoles[id];
+      if (ecoleIdInput) ecoleIdInput.value = id;
+      if (nomInput) nomInput.value = ecole.nom || "";
+      if (respInput) respInput.value = ecole.responsable || "";
+      if (cycleSelect) cycleSelect.value = ecole.cycle || "";
+      if (categorieSelect) categorieSelect.value = ecole.categorie || "";
       if (emailInput) {
-        emailInput.value = sd.email || "";
+        emailInput.value = ecole.email || "";
         emailInput.disabled = true;
       }
       if (passwordField) passwordField.style.display = "none";
-      if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-edit"></i> Modifier la Sous-Division';
+      if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-edit"></i> Modifier l\'École';
     } else {
-      if (sdIdInput) sdIdInput.value = "";
+      if (ecoleIdInput) ecoleIdInput.value = "";
       if (nomInput) nomInput.value = "";
       if (respInput) respInput.value = "";
+      if (cycleSelect) cycleSelect.value = "";
+      if (categorieSelect) categorieSelect.value = "";
       if (emailInput) {
         emailInput.value = "";
         emailInput.disabled = false;
       }
       if (passwordInput) passwordInput.value = generatePassword(10);
       if (passwordField) passwordField.style.display = "";
-      if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Nouvelle Sous-Division';
+      if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Nouvelle École';
     }
 
     modal.classList.add("show");
     if (nomInput) nomInput.focus();
   }
 
-  async function saveSd(e) {
+  async function saveEcole(e) {
     e.preventDefault();
 
-    const id = document.getElementById("sd-id").value;
-    const nom = document.getElementById("sd-nom").value.trim();
-    const responsable = document.getElementById("sd-responsable").value.trim();
-    const email = document.getElementById("sd-email").value.trim();
-    const password = document.getElementById("sd-password").value;
+    const id = document.getElementById("ecole-id").value;
+    const nom = document.getElementById("ecole-nom").value.trim();
+    const responsable = document.getElementById("ecole-responsable").value.trim();
+    const cycle = document.getElementById("ecole-cycle").value;
+    const categorie = document.getElementById("ecole-categorie").value;
+    const email = document.getElementById("ecole-email").value.trim();
+    const password = document.getElementById("ecole-password").value;
 
-    if (!nom || !email) {
-      toast("Le nom et l'email sont obligatoires", "error");
+    if (!nom || !email || !categorie) {
+      toast("Le nom, l'email et la catégorie sont obligatoires", "error");
       return;
     }
 
     try {
       if (id) {
-        await db.ref("sousDivisions/" + id).update({
+        await db.ref("ecoles/" + id).update({
           nom: nom,
           responsable: responsable,
+          cycle: cycle,
+          categorie: categorie,
           updatedAt: firebase.database.ServerValue.TIMESTAMP
         });
-        toast("Sous-Division mise à jour", "success");
+        await db.ref("utilisateurs/" + id).update({
+          nomEntite: nom,
+          responsable: responsable,
+          cycle: cycle,
+          categorie: categorie
+        });
+        toast("École mise à jour", "success");
       } else {
         const secAuth = getSecondaryAuth();
         const cred = await secAuth.createUserWithEmailAndPassword(email, password);
         const newUid = cred.user.uid;
 
-        const sdData = {
+        const ecoleData = {
           nom: nom,
           responsable: responsable,
+          cycle: cycle,
+          categorie: categorie,
           email: email,
+          sdId: currentSdId,
           ippId: currentIppId,
           statut: "actif",
           createdAt: firebase.database.ServerValue.TIMESTAMP
         };
 
-        await db.ref("sousDivisions/" + newUid).set(sdData);
+        await db.ref("ecoles/" + newUid).set(ecoleData);
         await db.ref("utilisateurs/" + newUid).set({
-          role: "sous-division",
+          role: "ecole",
           nomEntite: nom,
           responsable: responsable,
+          cycle: cycle,
+          categorie: categorie,
           entiteId: newUid,
-          sdId: newUid,
+          ecoleId: newUid,
+          sdId: currentSdId,
           ippId: currentIppId,
           email: email,
           createdAt: firebase.database.ServerValue.TIMESTAMP
@@ -933,10 +955,10 @@
 
         await secAuth.signOut();
 
-        toast('Sous-Division "' + nom + '" créée. Mot de passe : ' + password, "success");
+        toast('École "' + nom + '" créée. Mot de passe : ' + password, "success");
       }
 
-      document.getElementById("modal-sd").classList.remove("show");
+      document.getElementById("modal-ecole").classList.remove("show");
 
     } catch (error) {
       console.error(error);
@@ -944,8 +966,8 @@
     }
   }
 
-  async function resetSdPassword(email, nom) {
-    if (!email) { toast("Cette Sous-Division n'a pas d'email", "error"); return; }
+  async function resetEcolePassword(email, nom) {
+    if (!email) { toast("Cette École n'a pas d'email", "error"); return; }
     const ok = await confirmDialog("Réinitialiser le mot de passe", "Envoyer un email à " + email + " ?");
     if (!ok) return;
     try {
@@ -954,47 +976,47 @@
     } catch (err) { toast(err.message, "error"); }
   }
 
-  async function toggleSd(id, currentStatut) {
-    const sd = sousDivisions[id];
-    if (!sd) return;
+  async function toggleEcole(id, currentStatut) {
+    const ecole = ecoles[id];
+    if (!ecole) return;
 
     const willInactivate = currentStatut !== "inactif";
     const ok = await confirmDialog(
-      willInactivate ? "Désactiver cette Sous-Division ?" : "Réactiver cette Sous-Division ?",
+      willInactivate ? "Désactiver cette École ?" : "Réactiver cette École ?",
       willInactivate
-        ? 'La Sous-Division "' + sd.nom + '" sera marquée inactive.'
-        : 'La Sous-Division "' + sd.nom + '" redeviendra active.'
+        ? 'L\'École "' + ecole.nom + '" sera marquée inactive.'
+        : 'L\'École "' + ecole.nom + '" redeviendra active.'
     );
     if (!ok) return;
 
     try {
-      await db.ref("sousDivisions/" + id + "/statut").set(willInactivate ? "inactif" : "actif");
-      toast(willInactivate ? "Sous-Division désactivée" : "Sous-Division réactivée", "success");
+      await db.ref("ecoles/" + id + "/statut").set(willInactivate ? "inactif" : "actif");
+      toast(willInactivate ? "École désactivée" : "École réactivée", "success");
     } catch (err) {
       toast("Erreur : " + err.message, "error");
     }
   }
 
-  async function deleteSd(id, nom) {
+  async function deleteEcole(id, nom) {
     const ok = await confirmDialog(
       "⚠️ Supprimer définitivement ?",
-      'La Sous-Division "' + nom + '" sera marquée supprimée. Action IRRÉVERSIBLE.'
+      'L\'École "' + nom + '" sera marquée supprimée. Action IRRÉVERSIBLE.'
     );
     if (!ok) return;
 
     try {
-      await db.ref("sousDivisions/" + id + "/statut").set("supprime");
-      toast('Sous-Division "' + nom + '" supprimée', "success");
+      await db.ref("ecoles/" + id + "/statut").set("supprime");
+      toast('École "' + nom + '" supprimée', "success");
     } catch (err) {
       toast("Erreur : " + err.message, "error");
     }
   }
 
   // Exposer pour onclick
-  window.editSd = openSdModal;
-  window.toggleSd = toggleSd;
-  window.deleteSd = deleteSd;
-  window.resetSdPassword = resetSdPassword;
+  window.editEcole = openEcoleModal;
+  window.toggleEcole = toggleEcole;
+  window.deleteEcole = deleteEcole;
+  window.resetEcolePassword = resetEcolePassword;
 
   // ==================== HELPERS ====================
   function escape(s) {

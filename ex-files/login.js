@@ -2,31 +2,19 @@
    EKOLSTAT — Page de connexion (CORRIGÉ)
    ============================================================ */
 (function () {
-  const form      = document.getElementById("login-form");
-  const emailIn   = document.getElementById("email");
-  const passIn    = document.getElementById("password") || document.getElementById("pwdInput");
-  const remember  = document.getElementById("remember");
-  const btn       = document.getElementById("login-btn");
-  const btnLabel  = btn ? btn.querySelector(".btn-label") : null;
-  const btnLoad   = btn ? btn.querySelector(".btn-loader") : null;
-  const message   = document.getElementById("auth-message") || createAuthMessage();
-  const toggle    = document.getElementById("toggle-pass") || document.querySelector(".eye-btn");
-  const forgot    = document.getElementById("forgot-link") || document.querySelector(".link-muted:not([onclick])");
+  const form     = document.getElementById("login-form");
+  const emailIn  = document.getElementById("email");
+  const passIn   = document.getElementById("password");
+  const remember = document.getElementById("remember");
+  const btn      = document.getElementById("login-btn");
+  const btnLabel = btn.querySelector(".btn-label");
+  const btnLoad  = btn.querySelector(".btn-loader");
+  const message  = document.getElementById("auth-message");
+  const toggle   = document.getElementById("toggle-pass");
+  const forgot   = document.getElementById("forgot-link");
 
-  const auth = window.EKOLSTAT?.auth;
-  const db   = window.EKOLSTAT?.db;
-  const originalBtnText = btn ? btn.textContent.trim() : "Se connecter";
-
-  function createAuthMessage() {
-    const msg = document.createElement("div");
-    msg.id = "auth-message";
-    msg.className = "auth-message hidden";
-    msg.style.marginTop = "14px";
-    if (btn && btn.parentNode) {
-      btn.parentNode.insertBefore(msg, btn.nextSibling);
-    }
-    return msg;
-  }
+  const auth = window.EKOLSTAT.auth;
+  const db   = window.EKOLSTAT.db;
 
 
   // ==================== SPLASH SCREEN ====================
@@ -99,40 +87,31 @@
   });
 
   // Afficher / masquer le mot de passe
-  if (toggle && passIn) {
-    toggle.addEventListener("click", function () {
-      const isPwd = passIn.type === "password";
-      passIn.type = isPwd ? "text" : "password";
-      const icon = toggle.querySelector("i");
-      if (icon) {
-        icon.className = isPwd ? "fas fa-eye-slash" : "fas fa-eye";
-      }
-    });
-  }
+  toggle.addEventListener("click", function () {
+    const isPwd = passIn.type === "password";
+    passIn.type = isPwd ? "text" : "password";
+    toggle.querySelector("i").className = isPwd ? "fas fa-eye-slash" : "fas fa-eye";
+  });
 
-  async function handleLoginSubmit(e) {
-    if (e && typeof e.preventDefault === "function") {
-      e.preventDefault();
-    }
-
+  // Soumission du formulaire
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    
     if (redirecting) {
       console.log("[Login] Redirection déjà en cours, ignore");
       return;
     }
-
-    const email = emailIn ? emailIn.value.trim() : "";
-    const pass  = passIn ? passIn.value : "";
-    if (!email || !pass) {
-      showMessage("Veuillez renseigner votre email et votre mot de passe.", "info");
-      return;
-    }
+    
+    const email = emailIn.value.trim();
+    const pass  = passIn.value;
+    if (!email || !pass) return;
 
     setLoading(true);
     showMessage("", "");
 
     try {
       // Persistance selon "Se souvenir"
-      const persistence = remember && remember.checked
+      const persistence = remember.checked
         ? firebase.auth.Auth.Persistence.LOCAL
         : firebase.auth.Auth.Persistence.SESSION;
       await auth.setPersistence(persistence);
@@ -174,86 +153,36 @@
         console.log("[Login] Redirection vers:", targetUrl);
         window.location.href = targetUrl;
       }, 800);
+      
     } catch (err) {
       console.error("[Login] Erreur de connexion:", err);
       showMessage(window.EKOLSTAT.translateAuthError(err), "error");
       setLoading(false);
       redirecting = false;
     }
-  }
-
-  const isNativeForm = form instanceof HTMLFormElement;
-  if (isNativeForm) {
-    form.addEventListener("submit", handleLoginSubmit);
-  } else if (btn) {
-    btn.addEventListener("click", handleLoginSubmit);
-    [emailIn, passIn].forEach(input => {
-      if (!input) return;
-      input.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          handleLoginSubmit(event);
-        }
-      });
-    });
-  }
+  });
 
   // Mot de passe oublié
-  if (forgot) {
-    forgot.addEventListener("click", async function (e) {
-      e.preventDefault();
-      const email = emailIn ? emailIn.value.trim() : "";
-      if (!email) {
-        showMessage("Saisissez votre adresse e-mail puis cliquez à nouveau sur 'Mot de passe oublié'.", "info");
-        if (emailIn) emailIn.focus();
-        return;
-      }
-      try {
-        await auth.sendPasswordResetEmail(email);
-        showMessage("Un e-mail de réinitialisation vient d'être envoyé à " + email + ".", "success");
-      } catch (err) {
-        showMessage(window.EKOLSTAT.translateAuthError(err), "error");
-      }
-    });
-  }
-
-  function setLoading(on) {
-    if (!btn) return;
-    btn.disabled = on;
-
-    if (btnLabel && btnLoad) {
-      btnLabel.classList.toggle("hidden", on);
-      btnLoad.classList.toggle("hidden", !on);
+  forgot.addEventListener("click", async function (e) {
+    e.preventDefault();
+    const email = emailIn.value.trim();
+    if (!email) {
+      showMessage("Saisissez votre adresse e-mail puis cliquez à nouveau sur 'Mot de passe oublié'.", "info");
+      emailIn.focus();
       return;
     }
-
-    // Fallback: inject a simple spinner into the button when no loader markup exists
-    if (on) {
-      if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
-
-      let spinner = btn.querySelector('.btn-loader');
-      if (!spinner) {
-        spinner = document.createElement('span');
-        spinner.className = 'btn-loader';
-        spinner.style.marginLeft = '8px';
-        spinner.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        btn.appendChild(spinner);
-      }
-
-      // ensure button displays label text (use originalBtnText as fallback)
-      if (!btn.querySelector('.btn-label')) {
-        btn.textContent = originalBtnText;
-        btn.appendChild(spinner);
-      }
-    } else {
-      // restore original content if we saved it
-      if (btn.dataset.origHtml) {
-        btn.innerHTML = btn.dataset.origHtml;
-        delete btn.dataset.origHtml;
-      } else {
-        const spinner = btn.querySelector('.btn-loader');
-        if (spinner) spinner.remove();
-      }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      showMessage("Un e-mail de réinitialisation vient d'être envoyé à " + email + ".", "success");
+    } catch (err) {
+      showMessage(window.EKOLSTAT.translateAuthError(err), "error");
     }
+  });
+
+  function setLoading(on) {
+    btn.disabled = on;
+    btnLabel.classList.toggle("hidden", on);
+    btnLoad.classList.toggle("hidden", !on);
   }
 
   function showMessage(text, type) {

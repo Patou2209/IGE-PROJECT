@@ -14,8 +14,8 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-head">
         <div class="logos-container">
-          <img src="../img/ekolstat backless.png" alt="EKOLSTAT" class="sidebar-logo">
-          <div class="logo-separator"></div>
+          <!--<img src="../img/ekolstat backless.png" alt="EKOLSTAT" class="sidebar-logo">
+          <div class="logo-separator"></div> -->
           <img src="../img/logo min backless.png" alt="Ministère" class="sidebar-logo">
         </div>
         <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Réduire/Étendre la barre latérale"><i class="fas fa-bars"></i></button>
@@ -44,9 +44,12 @@
           <button class="icon-btn hamburger-btn" id="hamburger-btn" aria-label="Ouvrir le menu" type="button">
             <i class="fas fa-bars"></i>
           </button>
-          <div class="topbar-title">
-            <h1 id="page-title">Vue d'ensemble</h1>
-            <span class="breadcrumb" id="breadcrumb">Établissement scolaire</span>
+          <div class="user-menu">
+            <div class="user-avatar"><i class="fas fa-school"></i></div>
+            <div class="user-info">
+              <span class="user-name" id="user-name">École</span>
+              <span class="user-role" id="user-role">Établissement scolaire</span>
+            </div>
           </div>
         </div>
         <div class="topbar-right">
@@ -55,13 +58,7 @@
             <input type="text" id="global-search" placeholder="Rechercher une classe..." />
           </div>
           <button class="icon-btn" id="refresh-btn" aria-label="Rafraîchir"><i class="fas fa-rotate"></i></button>
-          <div class="user-menu">
-            <div class="user-avatar"><i class="fas fa-school"></i></div>
-            <div class="user-info">
-              <span class="user-name" id="user-name">École</span>
-              <span class="user-role" id="user-role">Établissement scolaire</span>
-            </div>
-          </div>
+          
         </div>
       </header>
 
@@ -100,29 +97,6 @@
             </div>
           </div>
 
-          <div class="kpi-grid">
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-red"><i class="fas fa-universal-access"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Total handicapés</span>
-                <span class="kpi-value" id="total-handicap">0</span>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-purple"><i class="fas fa-venus"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Filles handicapées</span>
-                <span class="kpi-value" id="total-filles-handicap">0</span>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-orange"><i class="fas fa-mars"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Garçons handicapés</span>
-                <span class="kpi-value" id="total-garcons-handicap">0</span>
-              </div>
-            </div>
-          </div>
 
           <!-- Graphique évolution -->
           <div class="panel">
@@ -242,6 +216,16 @@
             <label><i class="fas fa-chalkboard-user"></i> Professeur Principal</label>
             <input type="text" id="classe-professeur" placeholder="Nom du professeur principal" />
           </div>
+
+          <!-- Effectifs -->
+          <div class="form-field">
+            <label><i class="fas fa-venus"></i> Nombre de filles</label>
+            <input type="number" id="classe-filles" min="0" value="0" />
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-mars"></i> Nombre de garçons</label>
+            <input type="number" id="classe-garcons" min="0" value="0" />
+          </div>
         </div>
         <div class="modal-foot">
           <button type="button" class="btn btn-ghost" data-close-modal>Annuler</button>
@@ -269,14 +253,7 @@
             <label><i class="fas fa-mars"></i> Nombre de garçons</label>
             <input type="number" id="effectifs-garcons" min="0" value="0" required />
           </div>
-          <div class="form-field">
-            <label><i class="fas fa-universal-access"></i> Filles handicapées</label>
-            <input type="number" id="effectifs-filles-handicap" min="0" value="0" />
-          </div>
-          <div class="form-field">
-            <label><i class="fas fa-universal-access"></i> Garçons handicapés</label>
-            <input type="number" id="effectifs-garcons-handicap" min="0" value="0" />
-          </div>
+
         </div>
         <div class="modal-foot">
           <button type="button" class="btn btn-ghost" data-close-modal>Annuler</button>

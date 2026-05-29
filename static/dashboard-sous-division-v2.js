@@ -50,6 +50,15 @@
     return out;
   }
 
+  // ==================== SERIAL NUMBER ====================
+  function generateSerialNumber() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const rand4 = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    return 'SERIE:MINENNC' + yyyy + mm + rand4;
+  }
+
   // ==================== AUTHENTIFICATION ====================
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
@@ -127,7 +136,7 @@
     if (globalSearch) {
       globalSearch.addEventListener("input", function(e) {
         const q = e.target.value.toLowerCase().trim();
-        const rows = document.querySelectorAll("#ecole-summary-container tr, #ecole-management-container tr");
+        const rows = document.querySelectorAll("#ecole-summary-container tbody tr, #ecole-management-container tbody tr");
         rows.forEach(function(r) {
           if (!q) { r.style.display = ""; return; }
           r.style.display = r.textContent.toLowerCase().includes(q) ? "" : "none";
@@ -169,8 +178,15 @@
     // Modal École
     const btnNewEcole = document.getElementById("btn-new-ecole");
     const formEcole = document.getElementById("form-ecole");
+    const genPassEcole = document.getElementById("gen-pass-ecole");
     if (btnNewEcole) btnNewEcole.addEventListener("click", () => openEcoleModal());
     if (formEcole) formEcole.addEventListener("submit", saveEcole);
+    if (genPassEcole) {
+      genPassEcole.addEventListener("click", function() {
+        const passInput = document.getElementById("ecole-password");
+        if (passInput) passInput.value = generatePassword(10);
+      });
+    }
 
     // Export PDF
     const btnExportPdf = document.getElementById("btn-export-pdf");
@@ -188,12 +204,9 @@
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("sidebar-overlay");
     const burger = document.getElementById("hamburger-btn");
-    const sidebarToggle = document.getElementById("sidebar-toggle");
 
     if (burger && sidebar) {
       burger.addEventListener("click", () => {
-        // Mobile/tablette : drawer + overlay
-        // Desktop (>1024px) : toggle collapse/expand de la sidebar en place
         if (window.innerWidth <= 1024) {
           sidebar.classList.add("open");
           if (overlay) overlay.classList.add("show");
@@ -208,7 +221,6 @@
         overlay.classList.remove("show");
       });
     }
-    // Si la fenêtre passe de mobile à desktop, on referme le drawer proprement
     window.addEventListener("resize", () => {
       if (window.innerWidth > 1024) {
         sidebar.classList.remove("open");
@@ -221,12 +233,12 @@
   function getStats() {
     const stats = {
       totalEcoles: 0,
+      ecolesPubliques: 0,
+      ecolesPrivees: 0,
       totalClasses: 0,
       totalEleves: 0,
       totalFilles: 0,
       totalGarcons: 0,
-      totalFillesHandicap: 0,
-      totalGarconsHandicap: 0,
       ecoleStats: {}
     };
 
@@ -236,13 +248,15 @@
       const ecole = ecoles[ecoleId];
       if (ecole.statut === "supprime") continue;
       stats.totalEcoles++;
+      if (ecole.categorie === "publique") stats.ecolesPubliques++;
+      else if (ecole.categorie === "privee") stats.ecolesPrivees++;
       stats.ecoleStats[ecoleId] = {
         nom: ecole.nom,
         responsable: ecole.responsable || "",
         cycle: ecole.cycle || "",
         statut: ecole.statut || "actif",
         email: ecole.email || "",
-        classes: 0, eleves: 0, filles: 0, garcons: 0, handicap: 0
+        classes: 0, eleves: 0, filles: 0, garcons: 0
       };
     }
 
@@ -252,26 +266,21 @@
       const classe = classes[id];
       if (classe.statut === "supprime") continue;
 
-      const eff = effectifs[id] || { nb_filles:0, nb_garcons:0, nb_filles_handicap:0, nb_garcons_handicap:0 };
+      const eff = effectifs[id] || { nb_filles:0, nb_garcons:0 };
       const f = eff.nb_filles || 0;
       const g = eff.nb_garcons || 0;
-      const fh = eff.nb_filles_handicap || 0;
-      const gh = eff.nb_garcons_handicap || 0;
       const total = f + g;
 
       stats.totalClasses++;
       stats.totalEleves += total;
       stats.totalFilles += f;
       stats.totalGarcons += g;
-      stats.totalFillesHandicap += fh;
-      stats.totalGarconsHandicap += gh;
 
       if (classe.ecoleId && stats.ecoleStats[classe.ecoleId]) {
         stats.ecoleStats[classe.ecoleId].classes++;
         stats.ecoleStats[classe.ecoleId].eleves += total;
         stats.ecoleStats[classe.ecoleId].filles += f;
         stats.ecoleStats[classe.ecoleId].garcons += g;
-        stats.ecoleStats[classe.ecoleId].handicap += fh + gh;
       }
     }
 
@@ -280,9 +289,9 @@
 
   // Stats détaillées par cycle (pour rapports + PDF)
   function getStatsDetaillees() {
-    const statsMaternelle = { 1:0, 2:0, 3:0, filles:{1:0,2:0,3:0}, garcons:{1:0,2:0,3:0}, handicap:{1:0,2:0,3:0} };
-    const statsPrimaire = { 1:0,2:0,3:0,4:0,5:0,6:0, filles:{1:0,2:0,3:0,4:0,5:0,6:0}, garcons:{1:0,2:0,3:0,4:0,5:0,6:0}, handicap:{1:0,2:0,3:0,4:0,5:0,6:0} };
-    const statsCTEB = { 7:0, 8:0, filles:{7:0,8:0}, garcons:{7:0,8:0}, handicap:{7:0,8:0} };
+    const statsMaternelle = { 1:0, 2:0, 3:0, filles:{1:0,2:0,3:0}, garcons:{1:0,2:0,3:0} };
+    const statsPrimaire = { 1:0,2:0,3:0,4:0,5:0,6:0, filles:{1:0,2:0,3:0,4:0,5:0,6:0}, garcons:{1:0,2:0,3:0,4:0,5:0,6:0} };
+    const statsCTEB = { 7:0, 8:0, filles:{7:0,8:0}, garcons:{7:0,8:0} };
     const statsCycleLong = {};
     const statsCycleCourt = {};
 
@@ -291,11 +300,9 @@
       const classe = classes[id];
       if (classe.statut === "supprime") continue;
 
-      const eff = effectifs[id] || { nb_filles:0, nb_garcons:0, nb_filles_handicap:0, nb_garcons_handicap:0 };
+      const eff = effectifs[id] || { nb_filles:0, nb_garcons:0 };
       const f = eff.nb_filles || 0;
       const g = eff.nb_garcons || 0;
-      const fh = eff.nb_filles_handicap || 0;
-      const gh = eff.nb_garcons_handicap || 0;
 
       const niveau = classe.niveau;
       const cycle = classe.cycle;
@@ -305,37 +312,32 @@
         statsMaternelle[niveau] = (statsMaternelle[niveau] || 0) + f + g;
         statsMaternelle.filles[niveau] = (statsMaternelle.filles[niveau] || 0) + f;
         statsMaternelle.garcons[niveau] = (statsMaternelle.garcons[niveau] || 0) + g;
-        statsMaternelle.handicap[niveau] = (statsMaternelle.handicap[niveau] || 0) + fh + gh;
       } else if (cycle === "primaire") {
         statsPrimaire[niveau] = (statsPrimaire[niveau] || 0) + f + g;
         statsPrimaire.filles[niveau] = (statsPrimaire.filles[niveau] || 0) + f;
         statsPrimaire.garcons[niveau] = (statsPrimaire.garcons[niveau] || 0) + g;
-        statsPrimaire.handicap[niveau] = (statsPrimaire.handicap[niveau] || 0) + fh + gh;
       } else if (cycle === "secondaire") {
         const sousCycle = classe.sousCycle;
         if (sousCycle === "cteb") {
           statsCTEB[niveau] = (statsCTEB[niveau] || 0) + f + g;
           statsCTEB.filles[niveau] = (statsCTEB.filles[niveau] || 0) + f;
           statsCTEB.garcons[niveau] = (statsCTEB.garcons[niveau] || 0) + g;
-          statsCTEB.handicap[niveau] = (statsCTEB.handicap[niveau] || 0) + fh + gh;
         } else if (sousCycle === "long") {
           if (!statsCycleLong[niveau]) statsCycleLong[niveau] = {};
           if (!statsCycleLong[niveau][option]) {
-            statsCycleLong[niveau][option] = { total:0, filles:0, garcons:0, handicap:0, optionLibelle: classe.optionLibelle };
+            statsCycleLong[niveau][option] = { total:0, filles:0, garcons:0, optionLibelle: classe.optionLibelle };
           }
           statsCycleLong[niveau][option].total += f + g;
           statsCycleLong[niveau][option].filles += f;
           statsCycleLong[niveau][option].garcons += g;
-          statsCycleLong[niveau][option].handicap += fh + gh;
         } else if (sousCycle === "court") {
           if (!statsCycleCourt[niveau]) statsCycleCourt[niveau] = {};
           if (!statsCycleCourt[niveau][option]) {
-            statsCycleCourt[niveau][option] = { total:0, filles:0, garcons:0, handicap:0, optionLibelle: classe.optionLibelle };
+            statsCycleCourt[niveau][option] = { total:0, filles:0, garcons:0, optionLibelle: classe.optionLibelle };
           }
           statsCycleCourt[niveau][option].total += f + g;
           statsCycleCourt[niveau][option].filles += f;
           statsCycleCourt[niveau][option].garcons += g;
-          statsCycleCourt[niveau][option].handicap += fh + gh;
         }
       }
     }
@@ -354,16 +356,14 @@
   }
 
   function renderKPIs(stats) {
-    const totalHandicap = stats.totalFillesHandicap + stats.totalGarconsHandicap;
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmt(val); };
     set("total-ecoles", stats.totalEcoles);
     set("total-classes", stats.totalClasses);
     set("total-eleves", stats.totalEleves);
     set("total-filles", stats.totalFilles);
     set("total-garcons", stats.totalGarcons);
-    set("total-handicap", totalHandicap);
-    set("total-filles-handicap", stats.totalFillesHandicap);
-    set("total-garcons-handicap", stats.totalGarconsHandicap);
+    set("ecoles-publiques", stats.ecolesPubliques);
+    set("ecoles-privees", stats.ecolesPrivees);
   }
 
   function renderEcoleSummaryTable(stats) {
@@ -381,10 +381,9 @@
     html += '<th>Responsable</th>';
     html += '<th>Cycle</th>';
     html += '<th>Classes</th>';
-    html += '<th>Total élèves</th>';
     html += '<th>Filles</th>';
     html += '<th>Garçons</th>';
-    html += '<th>Handicapés</th>';
+    html += '<th><strong>Total élèves</strong></th>';
     html += '</tr></thead><tbody>';
 
     for (const ecoleId in stats.ecoleStats) {
@@ -400,10 +399,9 @@
       html += '<td>' + escape(s.responsable || "-") + '</td>';
       html += '<td>' + cycleLabel + '</td>';
       html += '<td>' + fmt(s.classes) + '</td>';
-      html += '<td><strong>' + fmt(s.eleves) + '</strong></td>';
       html += '<td>' + fmt(s.filles) + ' (' + pct(s.filles, s.eleves) + ')</td>';
       html += '<td>' + fmt(s.garcons) + ' (' + pct(s.garcons, s.eleves) + ')</td>';
-      html += '<td>' + fmt(s.handicap) + '</td>';
+      html += '<td><strong>' + fmt(s.eleves) + '</strong></td>';
       html += '</tr>';
     }
 
@@ -455,6 +453,7 @@
       html += '<td>';
       html += '  <div class="row-actions">';
       html += '    <button class="icon-btn" onclick="editEcole(\'' + ecoleId + '\')" title="Modifier"><i class="fas fa-edit"></i></button>';
+      html += '    <button class="icon-btn" onclick="resetEcolePassword(\'' + escape(ecole.email || '') + '\', \'' + escape(ecole.nom) + '\')" title="Réinitialiser MDP"><i class="fas fa-key"></i></button>';
       html += '    <button class="icon-btn ' + (ecole.statut === "inactif" ? "" : "warning") + '" onclick="toggleEcole(\'' + ecoleId + '\', \'' + (ecole.statut || "actif") + '\')" title="' + (ecole.statut === "inactif" ? "Réactiver" : "Désactiver") + '">';
       html += '      <i class="fas ' + (ecole.statut === "inactif" ? "fa-circle-play" : "fa-circle-pause") + '"></i>';
       html += '    </button>';
@@ -482,29 +481,29 @@
     let html = '';
 
     html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">Cycle Maternelle</h3>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
+    html += buildReportTable(['Classe','Filles','Garçons','<strong>Total</strong>'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
     html += '</div>';
 
     html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">Cycle Primaire</h3>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
+    html += buildReportTable(['Classe','Filles','Garçons','<strong>Total</strong>'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
     html += '</div>';
 
     html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">CTEB (7ème & 8ème)</h3>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
+    html += buildReportTable(['Classe','Filles','Garçons','<strong>Total</strong>'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
     html += '</div>';
 
     html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">Cycle Long (1ère → 4ème Humanité)</h3>';
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
+    html += buildReportTable(['Niveau','Option','Code','Filles','Garçons','<strong>Total</strong>'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
     html += '</div>';
 
     html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">Cycle Court (1ère → 3ème Humanité)</h3>';
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
+    html += buildReportTable(['Niveau','Option','Code','Filles','Garçons','<strong>Total</strong>'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
     html += '</div>';
 
     // Synthèse par École
     html += '<div style="margin-bottom:25px;"><h3 style="' + sectionStyle + '">Synthèse par École</h3>';
     html += buildReportTable(
-      ['École','Cycle','Classes','Total','Filles','Garçons','Handicap'],
+      ['École','Cycle','Classes','Filles','Garçons','<strong>Total</strong>'],
       buildEcoleSummaryRows(stats),
       thStyle, tdStyle
     );
@@ -521,13 +520,11 @@
       const total = s[i] || 0;
       const filles = s.filles[i] || 0;
       const garcons = s.garcons[i] || 0;
-      const handicap = s.handicap[i] || 0;
       rows.push([
         niveaux[i-1],
-        fmt(total),
         fmt(filles) + ' (' + pct(filles, total) + ')',
         fmt(garcons) + ' (' + pct(garcons, total) + ')',
-        fmt(handicap) + ' (' + pct(handicap, total) + ')'
+        '<strong>' + fmt(total) + '</strong>'
       ]);
     }
     return rows;
@@ -539,13 +536,11 @@
       const total = s[i] || 0;
       const filles = s.filles[i] || 0;
       const garcons = s.garcons[i] || 0;
-      const handicap = s.handicap[i] || 0;
       rows.push([
         niveaux[i-1],
-        fmt(total),
         fmt(filles) + ' (' + pct(filles, total) + ')',
         fmt(garcons) + ' (' + pct(garcons, total) + ')',
-        fmt(handicap) + ' (' + pct(handicap, total) + ')'
+        '<strong>' + fmt(total) + '</strong>'
       ]);
     }
     return rows;
@@ -558,13 +553,11 @@
       const total = s[niv] || 0;
       const filles = s.filles[niv] || 0;
       const garcons = s.garcons[niv] || 0;
-      const handicap = s.handicap[niv] || 0;
       rows.push([
         niv + 'ème',
-        fmt(total),
         fmt(filles) + ' (' + pct(filles, total) + ')',
         fmt(garcons) + ' (' + pct(garcons, total) + ')',
-        fmt(handicap) + ' (' + pct(handicap, total) + ')'
+        '<strong>' + fmt(total) + '</strong>'
       ]);
     }
     return rows;
@@ -579,20 +572,18 @@
           const total = data.total || 0;
           const filles = data.filles || 0;
           const garcons = data.garcons || 0;
-          const handicap = data.handicap || 0;
           rows.push([
             niveau + "ère Humanité",
             escape(data.optionLibelle || code),
             code,
-            fmt(total),
             fmt(filles) + ' (' + pct(filles, total) + ')',
             fmt(garcons) + ' (' + pct(garcons, total) + ')',
-            fmt(handicap) + ' (' + pct(handicap, total) + ')'
+            '<strong>' + fmt(total) + '</strong>'
           ]);
         }
       }
     }
-    if (rows.length === 0) rows.push(['—','—','—','0','0','0','0']);
+    if (rows.length === 0) rows.push(['—','—','—','0','0','<strong>0</strong>']);
     return rows;
   }
   function buildCycleCourtRows(s) {
@@ -605,20 +596,18 @@
           const total = data.total || 0;
           const filles = data.filles || 0;
           const garcons = data.garcons || 0;
-          const handicap = data.handicap || 0;
           rows.push([
             niveau + "ère Humanité",
             escape(data.optionLibelle || code),
             code,
-            fmt(total),
             fmt(filles) + ' (' + pct(filles, total) + ')',
             fmt(garcons) + ' (' + pct(garcons, total) + ')',
-            fmt(handicap) + ' (' + pct(handicap, total) + ')'
+            '<strong>' + fmt(total) + '</strong>'
           ]);
         }
       }
     }
-    if (rows.length === 0) rows.push(['—','—','—','0','0','0','0']);
+    if (rows.length === 0) rows.push(['—','—','—','0','0','<strong>0</strong>']);
     return rows;
   }
   function buildEcoleSummaryRows(stats) {
@@ -634,13 +623,12 @@
         escape(s.nom),
         cycleLabel,
         fmt(s.classes),
-        fmt(s.eleves),
         fmt(s.filles) + ' (' + pct(s.filles, s.eleves) + ')',
         fmt(s.garcons) + ' (' + pct(s.garcons, s.eleves) + ')',
-        fmt(s.handicap)
+        '<strong>' + fmt(s.eleves) + '</strong>'
       ]);
     }
-    if (rows.length === 0) rows.push(['—','—','0','0','0','0','0']);
+    if (rows.length === 0) rows.push(['—','—','0','0','0','<strong>0</strong>']);
     return rows;
   }
 
@@ -682,21 +670,34 @@
 
     const nomEntite = (currentProfile && currentProfile.nomEntite) || "Sous-Division";
     const responsable = (currentProfile && currentProfile.responsable) || "Non spécifié";
-    const dateRapport = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const now = new Date();
+    const dateRapport = now.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const yyyy = now.getFullYear();
+    const serial = generateSerialNumber();
 
     const stats = getStats();
     const d = getStatsDetaillees();
 
     const wrapper = document.createElement("div");
-    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:1123px";
+    wrapper.style.cssText = "font-family:'Inter',Arial,sans-serif;padding:20px;color:#111827;background:white;width:1123px;";
 
     const thStyle = 'border:1px solid #e5e7eb;padding:6px 8px;background:#f3f4f6;text-align:left;';
     const tdStyle = 'border:1px solid #e5e7eb;padding:6px 8px;text-align:left;';
     const sectionStyle = 'font-size:14px;font-weight:bold;background:#eff6ff;padding:6px 10px;border-left:4px solid #2563eb;margin:20px 0 10px;';
 
     let html = "";
-    html += '<div style="font-size:22px;font-weight:bold;color:#1e3a8a;text-align:center;margin-bottom:10px;">RAPPORT STATISTIQUE — ' + escape(nomEntite).toUpperCase() + '</div>';
-    html += '<div style="text-align:center;color:#4b5563;margin-bottom:30px;">République Démocratique du Congo<br>Ministère de l\'Enseignement Primaire, Secondaire et Technique<br>Date : ' + dateRapport + '</div>';
+
+    // En-tête officiel
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #2563eb;">';
+    html += '  <img src="../img/logo min backless.png" alt="RDC Ministère" style="height:120px;object-fit:contain;" />';
+    html += '  <div style="text-align:center;flex:1;padding:0 20px;">';
+    html += '    <div style="font-size:11px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.5px;">REPUBLIQUE DEMOCRATIQUE DU CONGO</div>';
+    html += '    <div style="font-size:10px;color:#374151;margin-top:2px;">MINISTERE DE L\'EDUCATION NATIONALE ET NOUVELLE CITOYENNETE</div>';
+    html += '    <div style="font-size:14px;font-weight:bold;color:#1e3a8a;margin-top:6px;">' + escape(nomEntite).toUpperCase() + '</div>';
+    html += '    <div style="font-size:12px;font-weight:600;color:#2563eb;margin-top:4px;">RAPPORT STATISTIQUE DES BULLETINS SCOLAIRES ' + yyyy + '-' + (yyyy + 1) + '</div>';
+    html += '  </div>';
+    html += '  <div style="width:80px;"></div>';
+    html += '</div>';
 
     // Synthèse globale
     html += '<div style="' + sectionStyle + '">1. SYNTHÈSE GLOBALE</div>';
@@ -706,42 +707,43 @@
     html += '</tr></thead><tbody>';
     html += '<tr><td style="' + tdStyle + '">Écoles</td><td style="' + tdStyle + '">' + fmt(stats.totalEcoles) + '</td></tr>';
     html += '<tr><td style="' + tdStyle + '">Classes</td><td style="' + tdStyle + '">' + fmt(stats.totalClasses) + '</td></tr>';
-    html += '<tr><td style="' + tdStyle + '">Total élèves</td><td style="' + tdStyle + '">' + fmt(stats.totalEleves) + '</td></tr>';
+    html += '<tr><td style="' + tdStyle + '">Total élèves</td><td style="' + tdStyle + '"><strong>' + fmt(stats.totalEleves) + '</strong></td></tr>';
     html += '<tr><td style="' + tdStyle + '">Filles</td><td style="' + tdStyle + '">' + fmt(stats.totalFilles) + ' (' + pct(stats.totalFilles, stats.totalEleves) + ')</td></tr>';
     html += '<tr><td style="' + tdStyle + '">Garçons</td><td style="' + tdStyle + '">' + fmt(stats.totalGarcons) + ' (' + pct(stats.totalGarcons, stats.totalEleves) + ')</td></tr>';
-    html += '<tr><td style="' + tdStyle + '">Filles handicapées</td><td style="' + tdStyle + '">' + fmt(stats.totalFillesHandicap) + '</td></tr>';
-    html += '<tr><td style="' + tdStyle + '">Garçons handicapés</td><td style="' + tdStyle + '">' + fmt(stats.totalGarconsHandicap) + '</td></tr>';
     html += '</tbody></table>';
 
     html += '<div style="' + sectionStyle + '">2. CYCLE MATERNELLE</div>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
+    html += buildReportTable(['Classe','Filles','Garçons','<strong>Total</strong>'], buildMaternelleRows(d.statsMaternelle), thStyle, tdStyle);
 
     html += '<div style="' + sectionStyle + '">3. CYCLE PRIMAIRE</div>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
+    html += buildReportTable(['Classe','Filles','Garçons','<strong>Total</strong>'], buildPrimaireRows(d.statsPrimaire), thStyle, tdStyle);
 
     html += '<div style="' + sectionStyle + '">4. CTEB (7ème & 8ème)</div>';
-    html += buildReportTable(['Classe','Total','Filles','Garçons','Handicapés'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
+    html += buildReportTable(['Classe','Filles','Garçons','<strong>Total</strong>'], buildCtebRows(d.statsCTEB), thStyle, tdStyle);
 
     html += '<div style="' + sectionStyle + '">5. CYCLE LONG</div>';
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
+    html += buildReportTable(['Niveau','Option','Code','Filles','Garçons','<strong>Total</strong>'], buildCycleLongRows(d.statsCycleLong), thStyle, tdStyle);
 
     html += '<div style="' + sectionStyle + '">6. CYCLE COURT</div>';
-    html += buildReportTable(['Niveau','Option','Code','Total','Filles','Garçons','Handicap'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
+    html += buildReportTable(['Niveau','Option','Code','Filles','Garçons','<strong>Total</strong>'], buildCycleCourtRows(d.statsCycleCourt), thStyle, tdStyle);
 
     html += '<div style="' + sectionStyle + '">7. SYNTHÈSE PAR ÉCOLE</div>';
     html += buildReportTable(
-      ['École','Cycle','Classes','Total','Filles','Garçons','Handicap'],
+      ['École','Cycle','Classes','Filles','Garçons','<strong>Total</strong>'],
       buildEcoleSummaryRows(stats),
       thStyle, tdStyle
     );
 
-    // Pied de page : signature
-    html += '<div style="margin-top:30px;padding-top:15px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:flex-end;">';
+    // Pied de page officiel
+    html += '<div style="margin-top:30px;padding-top:15px;border-top:2px solid #2563eb;display:flex;justify-content:space-between;align-items:flex-end;">';
     html += '  <div style="width:280px;text-align:center;">';
-    html += '    <div>Fait à Kinshasa, le ' + dateRapport + '</div>';
+    html += '    <div style="font-size:11px;">Fait à Kinshasa, le ' + dateRapport + '</div>';
     html += '    <div style="margin-top:50px;border-top:1px solid #000;width:100%;"></div>';
-    html += '    <div style="margin-top:6px;">Le Chef de Sous-Division</div>';
-    html += '    <div><strong>' + escape(responsable) + '</strong></div>';
+    html += '    <div style="margin-top:6px;font-size:11px;">Le Chef de Sous-Division</div>';
+    html += '    <div style="font-size:12px;font-weight:bold;">' + escape(responsable) + '</div>';
+    html += '  </div>';
+    html += '  <div style="text-align:center;font-size:9px;color:#6b7280;">';
+    html += '    <div>' + serial + '</div>';
     html += '  </div>';
     html += '  <div style="width:140px;height:90px;border:1px dashed #9ca3af;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:10px;">Sceau / Cachet</div>';
     html += '</div>';
@@ -759,9 +761,6 @@
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    // Le conteneur doit être dans le DOM ET visible par html2canvas.
-    // Astuce : on l'enveloppe dans un host invisible mais qui reste dans
-    // le flux (sinon html2canvas v1 capture une zone vide → PDF blanc).
     const host = document.createElement("div");
     host.setAttribute("aria-hidden", "true");
     host.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-9999;";
@@ -771,7 +770,6 @@
     host.appendChild(wrapper);
     document.body.appendChild(host);
 
-    // Petit délai pour laisser le layout/fonts se stabiliser avant la capture
     setTimeout(() => {
       window.html2pdf().set(opt).from(wrapper).save().then(() => {
         if (host.parentNode) document.body.removeChild(host);
@@ -853,6 +851,7 @@
     const nomInput = document.getElementById("ecole-nom");
     const respInput = document.getElementById("ecole-responsable");
     const cycleSelect = document.getElementById("ecole-cycle");
+    const categorieSelect = document.getElementById("ecole-categorie");
     const emailInput = document.getElementById("ecole-email");
     const passwordInput = document.getElementById("ecole-password");
     const passwordField = document.getElementById("field-password");
@@ -864,6 +863,7 @@
       if (nomInput) nomInput.value = ecole.nom || "";
       if (respInput) respInput.value = ecole.responsable || "";
       if (cycleSelect) cycleSelect.value = ecole.cycle || "";
+      if (categorieSelect) categorieSelect.value = ecole.categorie || "";
       if (emailInput) {
         emailInput.value = ecole.email || "";
         emailInput.disabled = true;
@@ -875,6 +875,7 @@
       if (nomInput) nomInput.value = "";
       if (respInput) respInput.value = "";
       if (cycleSelect) cycleSelect.value = "";
+      if (categorieSelect) categorieSelect.value = "";
       if (emailInput) {
         emailInput.value = "";
         emailInput.disabled = false;
@@ -895,32 +896,32 @@
     const nom = document.getElementById("ecole-nom").value.trim();
     const responsable = document.getElementById("ecole-responsable").value.trim();
     const cycle = document.getElementById("ecole-cycle").value;
+    const categorie = document.getElementById("ecole-categorie").value;
     const email = document.getElementById("ecole-email").value.trim();
     const password = document.getElementById("ecole-password").value;
 
-    if (!nom || !email) {
-      toast("Le nom et l'email sont obligatoires", "error");
+    if (!nom || !email || !categorie) {
+      toast("Le nom, l'email et la catégorie sont obligatoires", "error");
       return;
     }
 
     try {
       if (id) {
-        // Modification simple
         await db.ref("ecoles/" + id).update({
           nom: nom,
           responsable: responsable,
           cycle: cycle,
+          categorie: categorie,
           updatedAt: firebase.database.ServerValue.TIMESTAMP
         });
-        // Synchroniser le nomEntite côté utilisateur
         await db.ref("utilisateurs/" + id).update({
           nomEntite: nom,
           responsable: responsable,
-          cycle: cycle
+          cycle: cycle,
+          categorie: categorie
         });
         toast("École mise à jour", "success");
       } else {
-        // Création : compte Firebase + entrée DB
         const secAuth = getSecondaryAuth();
         const cred = await secAuth.createUserWithEmailAndPassword(email, password);
         const newUid = cred.user.uid;
@@ -929,6 +930,7 @@
           nom: nom,
           responsable: responsable,
           cycle: cycle,
+          categorie: categorie,
           email: email,
           sdId: currentSdId,
           ippId: currentIppId,
@@ -942,6 +944,7 @@
           nomEntite: nom,
           responsable: responsable,
           cycle: cycle,
+          categorie: categorie,
           entiteId: newUid,
           ecoleId: newUid,
           sdId: currentSdId,
@@ -961,6 +964,16 @@
       console.error(error);
       toast("Erreur : " + error.message, "error");
     }
+  }
+
+  async function resetEcolePassword(email, nom) {
+    if (!email) { toast("Cette École n'a pas d'email", "error"); return; }
+    const ok = await confirmDialog("Réinitialiser le mot de passe", "Envoyer un email à " + email + " ?");
+    if (!ok) return;
+    try {
+      await auth.sendPasswordResetEmail(email);
+      toast("Email envoyé à " + email, "success");
+    } catch (err) { toast(err.message, "error"); }
   }
 
   async function toggleEcole(id, currentStatut) {
@@ -1003,6 +1016,7 @@
   window.editEcole = openEcoleModal;
   window.toggleEcole = toggleEcole;
   window.deleteEcole = deleteEcole;
+  window.resetEcolePassword = resetEcolePassword;
 
   // ==================== HELPERS ====================
   function escape(s) {

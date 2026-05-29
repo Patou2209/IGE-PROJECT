@@ -41,7 +41,6 @@
     <div class="app-main">
       <header class="topbar">
         <div class="topbar-left">
-          <!-- Bouton hamburger visible sur tous les écrans (mobile, tablette, desktop) -->
           <button class="icon-btn hamburger-btn" id="hamburger-btn" aria-label="Ouvrir le menu" type="button">
             <i class="fas fa-bars"></i>
           </button>
@@ -92,34 +91,9 @@
                 <span class="kpi-value" id="total-garcons">0</span>
               </div>
             </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-red"><i class="fas fa-universal-access"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Total handicapés</span>
-                <span class="kpi-value" id="total-handicap">0</span>
-              </div>
-            </div>
           </div>
 
-          <!-- Deuxième ligne : Détail handicap -->
-          <div class="kpi-grid">
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-purple"><i class="fas fa-venus"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Filles handicapées</span>
-                <span class="kpi-value" id="total-filles-handicap">0</span>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-orange"><i class="fas fa-mars"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Garçons handicapés</span>
-                <span class="kpi-value" id="total-garcons-handicap">0</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Troisième ligne : Structures -->
+          <!-- Deuxième ligne : Structures -->
           <div class="kpi-grid">
             <div class="mini-card">
               <span class="mini-label"><i class="fas fa-building-columns"></i> IPP</span>
@@ -135,7 +109,7 @@
             </div>
           </div>
 
-          <!-- Quatrième ligne : Écoles par cycle -->
+          <!-- Troisième ligne : Écoles par cycle -->
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-icon kpi-purple"><i class="fas fa-baby-carriage"></i></div>
@@ -160,7 +134,7 @@
             </div>
           </div>
 
-          <!-- Cinquième ligne : Écoles par catégorie -->
+          <!-- Quatrième ligne : Écoles par catégorie -->
           <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-icon kpi-blue"><i class="fas fa-landmark"></i></div>
@@ -178,8 +152,11 @@
             </div>
           </div>
 
+
+          
+
           <!-- Filtres -->
-          <div class="panel">
+          <!--<div class="panel">
             <div class="panel-head">
               <h3><i class="fas fa-filter"></i> Filtres</h3>
               <span class="panel-sub">Affinez les indicateurs nationaux</span>
@@ -199,10 +176,10 @@
               </div>
               <button class="btn btn-ghost" id="reset-filters"><i class="fas fa-rotate-left"></i> Réinitialiser</button>
             </div>
-          </div>
+          </div> -->
 
           <!-- Tableau IPP de synthèse -->
-          <div class="panel">
+          <!--<div class="panel">
             <div class="panel-head">
               <h3><i class="fas fa-building-columns"></i> Synthèse par IPP</h3>
               <span class="panel-sub">Cliquez sur un IPP pour filtrer</span>
@@ -213,16 +190,15 @@
                   <tr>
                     <th>IPP (Province)</th>
                     <th>Code</th>
-                    <th>Total</th>
                     <th>Filles</th>
                     <th>Garçons</th>
-                    <th>Handicap</th>
+                    <th>Total</th>
                   </tr>
                 </thead>
                 <tbody id="ipp-summary-table"></tbody>
               </table>
             </div>
-          </div>
+          </div> -->
         </section>
 
         <!-- VIEW: IPP MANAGEMENT -->
@@ -231,7 +207,7 @@
             <div class="panel-head row">
               <div>
                 <h3><i class="fas fa-building-columns"></i> Gestion des IPP</h3>
-                <span class="panel-sub">Créer, modifier ou désactiver les Inspections Provinciales</span>
+                <span class="panel-sub">Créer, modifier, Voir les Statistiques ou désactiver les Inspections Provinciales</span>
               </div>
               <button class="btn btn-primary" id="btn-new-ipp"><i class="fas fa-plus"></i> Nouvel IPP</button>
             </div>
@@ -242,10 +218,10 @@
                     <th>Province</th>
                     <th>Code</th>
                     <th>Responsable</th>
-                    <th>Sous-divisions</th>
-                    <th>Écoles</th>
+                    <!--<th>Sous-divisions</th>
+                     <th>Écoles</th> 
                     <th>Classes</th>
-                    <th>Élèves</th>
+                    <th>Élèves</th>-->
                     <th>Statut</th>
                     <th>Actions</th>
                   </tr>
@@ -349,15 +325,12 @@
                 <h3><i class="fas fa-file-lines"></i> Rapports nationaux</h3>
                 <span class="panel-sub">Exportez les données agrégées détaillées</span>
               </div>
-
               <button class="btn btn-primary" id="btn-export-pdf">
                 <i class="fas fa-file-pdf"></i>
                 Exporter en PDF
               </button>
             </div>
-
             <div class="panel-body">
-              <!-- CONTENU DES RAPPORTS -->
               <div id="reports-container"></div>
             </div>
           </div>
@@ -409,6 +382,23 @@
           <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Stats IPP -->
+  <div class="modal" id="modal-ipp-stats">
+    <div class="modal-card lg">
+      <div class="modal-head">
+        <h3 id="modal-ipp-stats-title"><i class="fas fa-chart-bar"></i> Statistiques IPP</h3>
+        <button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="ipp-stats-content">
+        <div class="empty">Chargement...</div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" data-close-modal>Fermer</button>
+        <button type="button" class="btn btn-primary" id="btn-export-ipp-stats"><i class="fas fa-file-pdf"></i> Exporter PDF</button>
+      </div>
     </div>
   </div>
 

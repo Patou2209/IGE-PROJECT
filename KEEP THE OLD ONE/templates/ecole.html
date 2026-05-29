@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EKOLSTAT — Tableau de bord IPP</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Ctext x='50%25' y='58%25' font-family='Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EI%3C/text%3E%3C/svg%3E" />
+  <title>EKOLSTAT — Tableau de bord École</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Ctext x='50%25' y='58%25' font-family='Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EE%3C/text%3E%3C/svg%3E" />
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
   <link href="../static/style.css" rel="stylesheet" />
 </head>
-<body class="app-body" data-role="IPP">
+<body class="app-body" data-role="ECOLE">
   <div class="app-shell">
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -24,7 +24,8 @@
       <nav class="sidebar-nav">
         <span class="nav-section">Navigation</span>
         <a href="#" class="nav-link active" data-view="overview" data-tooltip="Vue d'ensemble"><i class="fas fa-gauge-high"></i><span>Vue d'ensemble</span></a>
-        <a href="#" class="nav-link" data-view="sous-divisions" data-tooltip="Gestion des Sous-Divisions"><i class="fas fa-sitemap"></i><span>Sous-Divisions</span></a>
+        <a href="#" class="nav-link" data-view="classes" data-tooltip="Gestion des classes"><i class="fas fa-chalkboard"></i><span>Gestion des classes</span></a>
+        <a href="#" class="nav-link" data-view="effectifs" data-tooltip="Saisie des effectifs"><i class="fas fa-chart-simple"></i><span>Saisie des effectifs</span></a>
         <a href="#" class="nav-link" data-view="reports" data-tooltip="Rapports"><i class="fas fa-file-lines"></i><span>Rapports</span></a>
         <span class="nav-section">Compte</span>
         <a href="#" class="nav-link" id="logout-link" data-tooltip="Déconnexion"><i class="fas fa-right-from-bracket"></i><span>Déconnexion</span></a>
@@ -45,20 +46,20 @@
           </button>
           <div class="topbar-title">
             <h1 id="page-title">Vue d'ensemble</h1>
-            <span class="breadcrumb" id="breadcrumb">Inspection Principale Provinciale</span>
+            <span class="breadcrumb" id="breadcrumb">Établissement scolaire</span>
           </div>
         </div>
         <div class="topbar-right">
           <div class="search-box">
             <i class="fas fa-magnifying-glass"></i>
-            <input type="text" id="global-search" placeholder="Rechercher une sous-division..." />
+            <input type="text" id="global-search" placeholder="Rechercher une classe..." />
           </div>
           <button class="icon-btn" id="refresh-btn" aria-label="Rafraîchir"><i class="fas fa-rotate"></i></button>
           <div class="user-menu">
-            <div class="user-avatar"><i class="fas fa-building-columns"></i></div>
+            <div class="user-avatar"><i class="fas fa-school"></i></div>
             <div class="user-info">
-              <span class="user-name" id="user-name">IPP</span>
-              <span class="user-role" id="user-role">Inspection Principale Provinciale</span>
+              <span class="user-name" id="user-name">École</span>
+              <span class="user-role" id="user-role">Établissement scolaire</span>
             </div>
           </div>
         </div>
@@ -70,17 +71,10 @@
           <!-- KPIS principaux -->
           <div class="kpi-grid">
             <div class="kpi-card">
-              <div class="kpi-icon kpi-blue"><i class="fas fa-sitemap"></i></div>
+              <div class="kpi-icon kpi-blue"><i class="fas fa-chalkboard"></i></div>
               <div class="kpi-body">
-                <span class="kpi-label">Sous-Divisions</span>
-                <span class="kpi-value" id="total-sd">0</span>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-green"><i class="fas fa-school"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Écoles</span>
-                <span class="kpi-value" id="total-ecoles">0</span>
+                <span class="kpi-label">Classes</span>
+                <span class="kpi-value" id="total-classes">0</span>
               </div>
             </div>
             <div class="kpi-card">
@@ -97,9 +91,6 @@
                 <span class="kpi-value" id="total-filles">0</span>
               </div>
             </div>
-          </div>
-
-          <div class="kpi-grid">
             <div class="kpi-card">
               <div class="kpi-icon kpi-cyan"><i class="fas fa-mars"></i></div>
               <div class="kpi-body">
@@ -107,59 +98,53 @@
                 <span class="kpi-value" id="total-garcons">0</span>
               </div>
             </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-red"><i class="fas fa-universal-access"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Total handicapés</span>
-                <span class="kpi-value" id="total-handicap">0</span>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-purple"><i class="fas fa-venus"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Filles handicapées</span>
-                <span class="kpi-value" id="total-filles-handicap">0</span>
-              </div>
-            </div>
-            <div class="kpi-card">
-              <div class="kpi-icon kpi-orange"><i class="fas fa-mars"></i></div>
-              <div class="kpi-body">
-                <span class="kpi-label">Garçons handicapés</span>
-                <span class="kpi-value" id="total-garcons-handicap">0</span>
-              </div>
-            </div>
           </div>
+
 
           <!-- Graphique évolution -->
           <div class="panel">
             <div class="panel-head">
-              <h3><i class="fas fa-chart-line"></i> Évolution des effectifs de la province</h3>
-              <span class="panel-sub">Suivi mensuel des effectifs</span>
+              <h3><i class="fas fa-chart-line"></i> Évolution des effectifs</h3>
+              <span class="panel-sub">Suivi mensuel des effectifs de l'établissement</span>
             </div>
             <div class="panel-body chart-wrap large"><canvas id="chart-evolution"></canvas></div>
           </div>
 
-          <!-- Tableau récapitulatif des SD -->
-          <div class="panel">
-            <div class="panel-head">
-              <h3><i class="fas fa-sitemap"></i> Sous-Divisions de la province</h3>
-              <span class="panel-sub">Synthèse par sous-division</span>
-            </div>
-            <div class="table-wrap" id="sd-summary-container"></div>
-          </div>
-        </section>
-
-        <!-- VIEW: GESTION DES SOUS-DIVISIONS -->
-        <section class="view" id="view-sous-divisions">
+          <!-- Tableau des classes -->
           <div class="panel">
             <div class="panel-head row">
               <div>
-                <h3><i class="fas fa-sitemap"></i> Gestion des Sous-Divisions</h3>
-                <span class="panel-sub">Créez, modifiez ou désactivez des sous-divisions</span>
+                <h3><i class="fas fa-chalkboard"></i> Classes de l'établissement</h3>
+                <span class="panel-sub">Liste de toutes les classes et leurs effectifs</span>
               </div>
-              <button class="btn btn-primary" id="btn-new-sd"><i class="fas fa-plus"></i> Nouvelle Sous-Division</button>
+              <button class="btn btn-primary" id="btn-new-classe"><i class="fas fa-plus"></i> Nouvelle classe</button>
             </div>
-            <div class="table-wrap" id="sd-management-container"></div>
+            <div class="table-wrap" id="classes-table-container"></div>
+          </div>
+        </section>
+
+        <!-- VIEW: GESTION DES CLASSES -->
+        <section class="view" id="view-classes">
+          <div class="panel">
+            <div class="panel-head row">
+              <div>
+                <h3><i class="fas fa-chalkboard"></i> Gestion des classes</h3>
+                <span class="panel-sub">Créez, modifiez ou supprimez des classes</span>
+              </div>
+              <button class="btn btn-primary" id="btn-new-classe-modal"><i class="fas fa-plus"></i> Nouvelle classe</button>
+            </div>
+            <div class="table-wrap" id="classes-management-container"></div>
+          </div>
+        </section>
+
+        <!-- VIEW: SAISIE DES EFFECTIFS -->
+        <section class="view" id="view-effectifs">
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-chart-simple"></i> Saisie des effectifs</h3>
+              <span class="panel-sub">Mettez à jour les effectifs par classe</span>
+            </div>
+            <div class="table-wrap" id="effectifs-table-container"></div>
           </div>
         </section>
 
@@ -168,8 +153,8 @@
           <div class="panel">
             <div class="panel-head row">
               <div>
-                <h3><i class="fas fa-file-lines"></i> Rapports Provinciaux</h3>
-                <span class="panel-sub">Statistiques détaillées de la province</span>
+                <h3><i class="fas fa-file-lines"></i> Rapports Établissement</h3>
+                <span class="panel-sub">Statistiques détaillées de l'établissement</span>
               </div>
               <button class="btn btn-primary" id="btn-export-pdf"><i class="fas fa-file-pdf"></i> Exporter en PDF</button>
             </div>
@@ -182,34 +167,96 @@
     </div>
   </div>
 
-  <!-- MODAL: Création/Modification d'une Sous-Division -->
-  <div class="modal" id="modal-sd">
+  <!-- MODAL: Création/Modification d'une classe -->
+  <div class="modal" id="modal-classe">
     <div class="modal-card">
       <div class="modal-head">
-        <h3 id="modal-sd-title"><i class="fas fa-plus-circle"></i> Nouvelle Sous-Division</h3>
+        <h3 id="modal-classe-title"><i class="fas fa-plus-circle"></i> Nouvelle classe</h3>
         <button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button>
       </div>
-      <form id="form-sd">
-        <input type="hidden" id="sd-id" />
+      <form id="form-classe">
+        <input type="hidden" id="classe-id" />
+        <input type="hidden" id="classe-nom" />
+        <div class="modal-body">
+          <!-- Cycle d'enseignement -->
+          <div class="form-field">
+            <label><i class="fas fa-graduation-cap"></i> Cycle d'enseignement</label>
+            <select id="classe-cycle" required>
+              <option value="">Sélectionner un cycle</option>
+            </select>
+            <small class="hint">Détermine les classes disponibles</small>
+          </div>
+
+          <!-- Sous-cycle (uniquement pour secondaire) -->
+          <div class="form-field hidden" id="field-sous-cycle">
+            <label><i class="fas fa-code-branch"></i> Sous-cycle</label>
+            <select id="classe-sous-cycle">
+              <option value="">Sélectionner un sous-cycle</option>
+              <option value="cteb">CTEB (7ème & 8ème)</option>
+              <option value="long">Cycle Long (1ère → 4ème Humanité)</option>
+              <option value="court">Cycle Court (1ère → 3ème Humanité)</option>
+            </select>
+          </div>
+
+          <!-- Niveau / Classe -->
+          <div class="form-field" id="field-niveau">
+            <label><i class="fas fa-layer-group"></i> Niveau / Classe</label>
+            <select id="classe-niveau" required>
+              <option value="">Sélectionner d'abord le cycle</option>
+            </select>
+          </div>
+
+          <!-- Option (uniquement pour secondaire Long/Court) -->
+          <div class="form-field hidden" id="field-option">
+            <label><i class="fas fa-book"></i> Option</label>
+            <select id="classe-option">
+              <option value="">Sélectionner une option</option>
+            </select>
+          </div>
+
+          <!-- Professeur Principal -->
+          <div class="form-field">
+            <label><i class="fas fa-chalkboard-user"></i> Professeur Principal</label>
+            <input type="text" id="classe-professeur" placeholder="Nom du professeur principal" />
+          </div>
+
+          <!-- Effectifs -->
+          <div class="form-field">
+            <label><i class="fas fa-venus"></i> Nombre de filles</label>
+            <input type="number" id="classe-filles" min="0" value="0" />
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-mars"></i> Nombre de garçons</label>
+            <input type="number" id="classe-garcons" min="0" value="0" />
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-modal>Annuler</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Saisie des effectifs -->
+  <div class="modal" id="modal-effectifs">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3><i class="fas fa-chart-simple"></i> Saisie des effectifs</h3>
+        <button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button>
+      </div>
+      <form id="form-effectifs">
+        <input type="hidden" id="effectifs-classe-id" />
         <div class="modal-body">
           <div class="form-field">
-            <label><i class="fas fa-tag"></i> Nom de la Sous-Division</label>
-            <input type="text" id="sd-nom" placeholder="Ex: SD Gombe" required />
+            <label><i class="fas fa-venus"></i> Nombre de filles</label>
+            <input type="number" id="effectifs-filles" min="0" value="0" required />
           </div>
           <div class="form-field">
-            <label><i class="fas fa-user"></i> Responsable</label>
-            <input type="text" id="sd-responsable" placeholder="Nom du responsable" />
+            <label><i class="fas fa-mars"></i> Nombre de garçons</label>
+            <input type="number" id="effectifs-garcons" min="0" value="0" required />
           </div>
-          <div class="form-field">
-            <label><i class="fas fa-envelope"></i> Email de connexion</label>
-            <input type="email" id="sd-email" placeholder="email@exemple.com" required />
-            <small class="hint">Cet email servira d'identifiant de connexion</small>
-          </div>
-          <div class="form-field" id="field-password">
-            <label><i class="fas fa-key"></i> Mot de passe initial</label>
-            <input type="text" id="sd-password" placeholder="Mot de passe auto-généré" readonly />
-            <small class="hint">À transmettre au responsable de manière sécurisée</small>
-          </div>
+
         </div>
         <div class="modal-foot">
           <button type="button" class="btn btn-ghost" data-close-modal>Annuler</button>
@@ -249,7 +296,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="../static/firebase-config.js"></script>
-  <script src="../static/dashboard-ipp-v2.js"></script>
+  <script src="../static/dashboard-ecole-v2.js"></script>
   <script src="../static/main.js"></script>
 </body>
 </html>

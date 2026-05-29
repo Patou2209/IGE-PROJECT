@@ -882,7 +882,7 @@
     // === EN-TÊTE OFFICIEL ===
     let html = '';
     html += '<div style="display:flex;align-items:center;border-bottom:2px solid #1e3a8a;padding-bottom:12px;margin-bottom:16px;">';
-    html += '  <img src="../img/logo min backless.png" alt="Ministère RDC" style="width:120px;height:120px;object-fit:contain;margin-right:20px;" />';
+    html += '  <img src="../img/logo min backless.png" alt="Ministère RDC" style="width:80px;height:80px;object-fit:contain;margin-right:20px;" />';
     html += '  <div style="flex:1;text-align:center;">';
     html += '    <div style="font-size:11px;font-weight:600;color:#374151;letter-spacing:0.5px;">REPUBLIQUE DEMOCRATIQUE DU CONGO</div>';
     html += '    <div style="font-size:10px;color:#374151;margin-top:2px;">MINISTERE DE L\'EDUCATION NATIONALE ET NOUVELLE CITOYENNETE</div>';

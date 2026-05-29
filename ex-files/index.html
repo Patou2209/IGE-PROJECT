@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EKOLSTAT — Connexion</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Ctext x='50%25' y='58%25' font-family='Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EE%3C/text%3E%3C/svg%3E" />
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="static/style.css" rel="stylesheet" />
+  <link href="static/index-style.css" rel="stylesheet" />
+
+</head>
+<body >
+  <!-- <nav>
+      <img src="img/logo min backless.png" alt="">
+          <div class="navigation">
+              <ul>
+                <i id="menu-close" class="fas fa-times"></i>
+                  <li><a href="#" onclick="alert('en attente de contenu de la page. Merci de revenir plus tard')">Acceuil</a></li>
+                  <li><a href="#" onclick="alert('en attente de contenu de la page. Merci de revenir plus tard')" >A propos</a></li>
+                  <li><a href="#" onclick="alert('en attente de contenu de la page. Merci de revenir plus tard')">Contact</a></li> 
+            </ul>
+            <img id="menu-btn" src="img/menu.png" alt="">
+        </div>
+    </nav>-->
+
+  <div class="auth-body">
+    <button class="contact-top">CONTACTEZ NOUS <i class="fas fa-arrow-right-to-bracket"></i></button>
+    <div class="auth-shell">
+      <main class="auth-main">
+        <div class="auth-card">
+          <div class="auth-card-head">
+            <h2>Connexion</h2>
+            
+          </div>
+
+          <form id="login-form" class="auth-form" autocomplete="on">
+            <div class="form-field">
+              <label for="email"><i class="fas fa-envelope"></i> Adresse e-mail</label>
+              <input type="email" id="email" name="email" placeholder="exemple@education.rdc" required />
+            </div>
+
+            <div class="form-field">
+              <label for="password"><i class="fas fa-lock"></i> Mot de passe</label>
+              <div class="password-wrap">
+                <input type="password" id="password" name="password" placeholder="Votre mot de passe" required />
+                <button type="button" class="password-toggle" id="toggle-pass" aria-label="Afficher le mot de passe">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label class="checkbox">
+                <input type="checkbox" id="remember" />
+                <span class="link-muted">Se souvenir de moi</span>
+              </label>
+              <a href="#" id="forgot-link" class="link-muted">Mot de passe oublié ?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+              <span class="btn-label"><i class="fas fa-arrow-right-to-bracket"></i> Se connecter</span>
+              <span class="btn-loader hidden"><i class="fas fa-spinner fa-spin"></i></span>
+            </button>
+
+            <div id="auth-message" class="auth-message hidden"></div>
+          </form>
+
+          <div class="auth-card-foot">
+            <p><i class="fas fa-circle-info"></i> Les identifiants sont attribués par votre niveau supérieur.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- SPLASH SCREEN / LOADER -->
+  <!--<div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo-container">
+        <img src="img/ekolstat backless.png" alt="EKOLSTAT" class="splash-logo">
+        <div class="splash-logo-text">
+          <span class="splash-brand">EKOLSTAT</span>
+          <span class="splash-tag">Plateforme de collecte de données statistiques des Eleves</span>
+        </div>
+      </div>
+      <div class="splash-spinner">
+        <div class="spinner"></div>
+      </div>
+      <p class="splash-loading">Chargement...</p>
+    </div>
+  </div> -->
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="static/firebase-config.js"></script>
+  <script src="static/main.js"></script>
+  <script src="static/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EKOLSTAT — Tableau de bord IGE</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Ctext x='50%25' y='58%25' font-family='Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3EE%3C/text%3E%3C/svg%3E" />
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="../static/style.css" rel="stylesheet" />
+</head>
+<body class="app-body" data-role="IGE">
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="logos-container">
+          
+          <div class="logo-separator"></div>
+          <img src="../img/logo min backless.png" alt="Ministère" class="sidebar-logo">
+        </div>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Réduire/Étendre la barre latérale"><i class="fas fa-bars"></i></button>
+      </div>
+      <nav class="sidebar-nav">
+        <span class="nav-section">Navigation</span>
+        <a href="#" class="nav-link active" data-view="overview" data-tooltip="Vue d'ensemble"><i class="fas fa-gauge-high"></i><span>Vue d'ensemble</span></a>
+        <a href="#" class="nav-link" data-view="ipp" data-tooltip="Gestion des IPP"><i class="fas fa-building-columns"></i><span>Gestion des IPP</span></a>
+        <a href="#" class="nav-link" data-view="maternelle" data-tooltip="Cycle Maternelle"><i class="fas fa-baby-carriage"></i><span>Cycle Maternelle</span></a>
+        <a href="#" class="nav-link" data-view="primaire" data-tooltip="Cycle Primaire"><i class="fas fa-book"></i><span>Cycle Primaire</span></a>
+        <a href="#" class="nav-link" data-view="secondaire" data-tooltip="Cycle Secondaire"><i class="fas fa-graduation-cap"></i><span>Cycle Secondaire</span></a>
+        <a href="#" class="nav-link" data-view="indicators" data-tooltip="Indicateurs"><i class="fas fa-chart-line"></i><span>Indicateurs</span></a>
+        <a href="#" class="nav-link" data-view="reports" data-tooltip="Rapports"><i class="fas fa-file-lines"></i><span>Rapports</span></a>
+        <span class="nav-section">Compte</span>
+        <a href="#" class="nav-link" id="logout-link" data-tooltip="Déconnexion"><i class="fas fa-right-from-bracket"></i><span>Déconnexion</span></a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="version">EKOLSTAT v2.0</span>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="app-main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn hamburger-btn" id="hamburger-btn" aria-label="Ouvrir le menu" type="button">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="user-menu">
+            <div class="user-avatar"><i class="fas fa-user-shield"></i></div>
+            <div class="user-info">
+              <span class="user-name" id="user-name">Inspection Générale</span>
+              <span class="user-role">IGE · RDC</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="search-box">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" id="global-search" placeholder="Rechercher..." />
+          </div>
+          <button class="icon-btn" id="refresh-btn" aria-label="Rafraîchir"><i class="fas fa-rotate"></i></button>
+          
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- VIEW: OVERVIEW - KPIs principaux -->
+        <section class="view active" id="view-overview">
+          <!-- Première ligne : Effectifs -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-blue"><i class="fas fa-users"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Total élèves</span>
+                <span class="kpi-value" id="total-eleves">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-pink"><i class="fas fa-venus"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Filles</span>
+                <span class="kpi-value" id="total-filles">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-cyan"><i class="fas fa-mars"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Garçons</span>
+                <span class="kpi-value" id="total-garcons">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deuxième ligne : Structures -->
+          <div class="kpi-grid">
+            <div class="mini-card">
+              <span class="mini-label"><i class="fas fa-building-columns"></i> IPP</span>
+              <span class="mini-value" id="total-ipp">0</span>
+            </div>
+            <div class="mini-card">
+              <span class="mini-label"><i class="fas fa-diagram-project"></i> Sous-divisions</span>
+              <span class="mini-value" id="total-sd">0</span>
+            </div>
+            <div class="mini-card">
+              <span class="mini-label"><i class="fas fa-school"></i> Écoles</span>
+              <span class="mini-value" id="total-ecoles">0</span>
+            </div>
+          </div>
+
+          <!-- Troisième ligne : Écoles par cycle -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-purple"><i class="fas fa-baby-carriage"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles Maternelle</span>
+                <span class="kpi-value" id="ecoles-maternelle">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-green"><i class="fas fa-book"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles Primaire</span>
+                <span class="kpi-value" id="ecoles-primaire">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-orange"><i class="fas fa-graduation-cap"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles Secondaire</span>
+                <span class="kpi-value" id="ecoles-secondaire">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quatrième ligne : Écoles par catégorie -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-blue"><i class="fas fa-landmark"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles Publiques</span>
+                <span class="kpi-value" id="ecoles-publiques">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-cyan"><i class="fas fa-building"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles Privées</span>
+                <span class="kpi-value" id="ecoles-privees">0</span>
+              </div>
+            </div>
+          </div>
+
+
+          
+
+          <!-- Filtres -->
+          <!--<div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-filter"></i> Filtres</h3>
+              <span class="panel-sub">Affinez les indicateurs nationaux</span>
+            </div>
+            <div class="panel-body filters">
+              <div class="form-field">
+                <label>IPP (Province)</label>
+                <select id="filter-ipp"><option value="">Toutes les provinces</option></select>
+              </div>
+              <div class="form-field">
+                <label>Catégorie d'école</label>
+                <select id="filter-categorie">
+                  <option value="">Toutes les catégories</option>
+                  <option value="publique">Publique</option>
+                  <option value="privee">Privée</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" id="reset-filters"><i class="fas fa-rotate-left"></i> Réinitialiser</button>
+            </div>
+          </div> -->
+
+          <!-- Tableau IPP de synthèse -->
+          <!--<div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-building-columns"></i> Synthèse par IPP</h3>
+              <span class="panel-sub">Cliquez sur un IPP pour filtrer</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>IPP (Province)</th>
+                    <th>Code</th>
+                    <th>Filles</th>
+                    <th>Garçons</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="ipp-summary-table"></tbody>
+              </table>
+            </div>
+          </div> -->
+        </section>
+
+        <!-- VIEW: IPP MANAGEMENT -->
+        <section class="view" id="view-ipp">
+          <div class="panel">
+            <div class="panel-head row">
+              <div>
+                <h3><i class="fas fa-building-columns"></i> Gestion des IPP</h3>
+                <span class="panel-sub">Créer, modifier, Voir les Statistiques ou désactiver les Inspections Provinciales</span>
+              </div>
+              <button class="btn btn-primary" id="btn-new-ipp"><i class="fas fa-plus"></i> Nouvel IPP</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Province</th>
+                    <th>Code</th>
+                    <th>Responsable</th>
+                    <!--<th>Sous-divisions</th>
+                     <th>Écoles</th> 
+                    <th>Classes</th>
+                    <th>Élèves</th>-->
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="ipp-table">
+                  <tr><td colspan="9" class="empty">Aucun IPP enregistré</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW: MATERNELLE -->
+        <section class="view" id="view-maternelle">
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-baby-carriage"></i> Cycle Maternelle - Effectifs par classe</h3>
+              <span class="panel-sub">Répartition des élèves par niveau</span>
+            </div>
+            <div class="table-wrap" id="maternelle-table-container"></div>
+          </div>
+        </section>
+
+        <!-- VIEW: PRIMAIRE -->
+        <section class="view" id="view-primaire">
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-book"></i> Cycle Primaire - Effectifs par classe</h3>
+              <span class="panel-sub">Répartition des élèves par niveau (1ère à 6ème)</span>
+            </div>
+            <div class="table-wrap" id="primaire-table-container"></div>
+          </div>
+        </section>
+
+        <!-- VIEW: SECONDAIRE -->
+        <section class="view" id="view-secondaire">
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-graduation-cap"></i> Cycle Secondaire - Effectifs par cycle et option</h3>
+              <span class="panel-sub">CTEB | Cycle Long | Cycle Court</span>
+            </div>
+            
+            <!-- CTEB -->
+            <div class="panel-head" style="margin-top: 16px;">
+              <h4><i class="fas fa-chalkboard"></i> CTEB (7ème & 8ème)</h4>
+            </div>
+            <div class="table-wrap" id="cteb-table-container"></div>
+            
+            <!-- Cycle Long -->
+            <div class="panel-head" style="margin-top: 16px;">
+              <h4><i class="fas fa-chart-line"></i> Cycle Long (1ère → 4ème Humanité)</h4>
+            </div>
+            <div class="table-wrap" id="cycle-long-table-container"></div>
+            
+            <!-- Cycle Court -->
+            <div class="panel-head" style="margin-top: 16px;">
+              <h4><i class="fas fa-chart-line"></i> Cycle Court (1ère → 3ème Humanité)</h4>
+            </div>
+            <div class="table-wrap" id="cycle-court-table-container"></div>
+          </div>
+        </section>
+
+        <!-- VIEW: INDICATEURS -->
+        <section class="view" id="view-indicators">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-green"><i class="fas fa-bolt"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Taux d'activité (30j)</span>
+                <span class="kpi-value" id="ind-activity">0%</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-amber"><i class="fas fa-clock"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Classes inactives</span>
+                <span class="kpi-value" id="ind-inactive">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-red"><i class="fas fa-bug"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Incohérences</span>
+                <span class="kpi-value" id="ind-incoherences">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-chart-line"></i> Évolution des effectifs</h3>
+            </div>
+            <div class="panel-body chart-wrap large"><canvas id="chart-evolution"></canvas></div>
+          </div>
+        </section>
+
+        <!-- VIEW: REPORTS -->
+        <section class="view" id="view-reports">
+          <div class="panel">
+            <div class="panel-head row">
+              <div>
+                <h3><i class="fas fa-file-lines"></i> Rapports nationaux</h3>
+                <span class="panel-sub">Exportez les données agrégées détaillées</span>
+              </div>
+              <button class="btn btn-primary" id="btn-export-pdf">
+                <i class="fas fa-file-pdf"></i>
+                Exporter en PDF
+              </button>
+            </div>
+            <div class="panel-body">
+              <div id="reports-container"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: Nouvel IPP -->
+  <div class="modal" id="modal-ipp">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-ipp-title"><i class="fas fa-plus-circle"></i> Nouvel IPP</h3>
+        <button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button>
+      </div>
+      <form id="form-ipp">
+        <input type="hidden" id="ipp-id" />
+        <div class="modal-body">
+          <div class="form-field">
+            <label><i class="fas fa-building-columns"></i> Province</label>
+            <select id="ipp-province" required>
+              <option value="">Sélectionner une province</option>
+            </select>
+            <small class="hint">Choisir la province dans la liste</small>
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-hashtag"></i> Code province</label>
+            <input type="text" id="ipp-code" readonly disabled />
+            <small class="hint">Code automatique selon la province sélectionnée</small>
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-user"></i> Responsable</label>
+            <input type="text" id="ipp-responsable" placeholder="Nom du responsable provincial" />
+          </div>
+          <div class="form-field" id="field-ipp-email">
+            <label><i class="fas fa-envelope"></i> Adresse e-mail</label>
+            <input type="email" id="ipp-email" placeholder="ipp.province@education.rdc" required />
+          </div>
+          <div class="form-field" id="field-ipp-pass">
+            <label><i class="fas fa-lock"></i> Mot de passe initial</label>
+            <div class="password-wrap">
+              <input type="text" id="ipp-pass" placeholder="Généré automatiquement" required />
+              <button type="button" class="password-toggle" id="gen-pass"><i class="fas fa-wand-magic-sparkles"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-modal>Annuler</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Stats IPP -->
+  <div class="modal" id="modal-ipp-stats">
+    <div class="modal-card lg">
+      <div class="modal-head">
+        <h3 id="modal-ipp-stats-title"><i class="fas fa-chart-bar"></i> Statistiques IPP</h3>
+        <button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="ipp-stats-content">
+        <div class="empty">Chargement...</div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" data-close-modal>Fermer</button>
+        <button type="button" class="btn btn-primary" id="btn-export-ipp-stats"><i class="fas fa-file-pdf"></i> Exporter PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirmation -->
+  <div class="modal" id="modal-confirm">
+    <div class="modal-card sm">
+      <div class="modal-head"><h3 id="confirm-title"><i class="fas fa-circle-question"></i> Confirmation</h3><button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button></div>
+      <div class="modal-body"><p id="confirm-message">Êtes-vous sûr ?</p></div>
+      <div class="modal-foot"><button class="btn btn-ghost" data-close-modal>Annuler</button><button class="btn btn-danger" id="confirm-ok">Confirmer</button></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"><i class="fas fa-circle-info"></i><span id="toast-msg"></span></div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="../static/firebase-config.js"></script>
+  <script src="../static/dashboard-ige-v2.js"></script>
+  <script src="../static/main.js"></script>
+
+</body>
+</html>

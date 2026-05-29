@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EKOLSTAT — Tableau de bord Sous-Division</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231d4ed8'/%3E%3Ctext x='50%25' y='58%25' font-family='Arial,sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='white'%3ES%3C/text%3E%3C/svg%3E" />
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="../static/style.css" rel="stylesheet" />
+</head>
+<body class="app-body" data-role="SOUS_DIVISION">
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="logos-container">
+          <!--<img src="../img/ekolstat backless.png" alt="EKOLSTAT" class="sidebar-logo">
+          <div class="logo-separator"></div> -->
+          <img src="../img/logo min backless.png" alt="Ministère" class="sidebar-logo">
+        </div>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Réduire/Étendre la barre latérale"><i class="fas fa-bars"></i></button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <span class="nav-section">Navigation</span>
+        <a href="#" class="nav-link active" data-view="overview" data-tooltip="Vue d'ensemble"><i class="fas fa-gauge-high"></i><span>Vue d'ensemble</span></a>
+        <a href="#" class="nav-link" data-view="ecoles" data-tooltip="Gestion des Écoles"><i class="fas fa-school"></i><span>Écoles</span></a>
+        <a href="#" class="nav-link" data-view="reports" data-tooltip="Rapports"><i class="fas fa-file-lines"></i><span>Rapports</span></a>
+        <span class="nav-section">Compte</span>
+        <a href="#" class="nav-link" id="logout-link" data-tooltip="Déconnexion"><i class="fas fa-right-from-bracket"></i><span>Déconnexion</span></a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <span class="version">EKOLSTAT v2.0</span>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="app-main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <!-- Bouton hamburger visible sur tous les écrans -->
+          <button class="icon-btn hamburger-btn" id="hamburger-btn" aria-label="Ouvrir le menu" type="button">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="user-menu">
+            <div class="user-avatar"><i class="fas fa-sitemap"></i></div>
+            <div class="user-info">
+              <span class="user-name" id="user-name">Sous-Division</span>
+              <span class="user-role" id="user-role">Sous-Division</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="search-box">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" id="global-search" placeholder="Rechercher une école..." />
+          </div>
+          <button class="icon-btn" id="refresh-btn" aria-label="Rafraîchir"><i class="fas fa-rotate"></i></button>
+          
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- VIEW: OVERVIEW -->
+        <section class="view active" id="view-overview">
+          <!-- KPIS principaux -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-blue"><i class="fas fa-school"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles</span>
+                <span class="kpi-value" id="total-ecoles">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-green"><i class="fas fa-chalkboard"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Classes</span>
+                <span class="kpi-value" id="total-classes">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-amber"><i class="fas fa-users"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Total élèves</span>
+                <span class="kpi-value" id="total-eleves">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-pink"><i class="fas fa-venus"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Filles</span>
+                <span class="kpi-value" id="total-filles">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-cyan"><i class="fas fa-mars"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Garçons</span>
+                <span class="kpi-value" id="total-garcons">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-blue"><i class="fas fa-landmark"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles Publiques</span>
+                <span class="kpi-value" id="ecoles-publiques">0</span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon kpi-cyan"><i class="fas fa-building"></i></div>
+              <div class="kpi-body">
+                <span class="kpi-label">Écoles Privées</span>
+                <span class="kpi-value" id="ecoles-privees">0</span>
+              </div>
+            </div>
+          </div>
+          <!-- Graphique évolution -->
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-chart-line"></i> Évolution des effectifs de la sous-division</h3>
+              <span class="panel-sub">Suivi mensuel des effectifs</span>
+            </div>
+            <div class="panel-body chart-wrap large"><canvas id="chart-evolution"></canvas></div>
+          </div>
+
+          <!-- Tableau récapitulatif des Écoles -->
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fas fa-school"></i> Écoles de la sous-division</h3>
+              <span class="panel-sub">Synthèse par école</span>
+            </div>
+            <div class="table-wrap" id="ecole-summary-container"></div>
+          </div>
+        </section>
+
+        <!-- VIEW: GESTION DES ÉCOLES -->
+        <section class="view" id="view-ecoles">
+          <div class="panel">
+            <div class="panel-head row">
+              <div>
+                <h3><i class="fas fa-school"></i> Gestion des Écoles</h3>
+                <span class="panel-sub">Créez, modifiez ou désactivez des écoles</span>
+              </div>
+              <button class="btn btn-primary" id="btn-new-ecole"><i class="fas fa-plus"></i> Nouvelle École</button>
+            </div>
+            <div class="table-wrap" id="ecole-management-container"></div>
+          </div>
+        </section>
+
+        <!-- VIEW: RAPPORTS -->
+        <section class="view" id="view-reports">
+          <div class="panel">
+            <div class="panel-head row">
+              <div>
+                <h3><i class="fas fa-file-lines"></i> Rapports Sous-Division</h3>
+                <span class="panel-sub">Statistiques détaillées de la sous-division</span>
+              </div>
+              <button class="btn btn-primary" id="btn-export-pdf"><i class="fas fa-file-pdf"></i> Exporter en PDF</button>
+            </div>
+            <div class="panel-body" id="reports-container">
+              <div class="loading-reports">Chargement des statistiques...</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: Création/Modification d'une École -->
+  <div class="modal" id="modal-ecole">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modal-ecole-title"><i class="fas fa-plus-circle"></i> Nouvelle École</h3>
+        <button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button>
+      </div>
+      <form id="form-ecole">
+        <input type="hidden" id="ecole-id" />
+        <div class="modal-body">
+          <div class="form-field">
+            <label><i class="fas fa-tag"></i> Nom de l'École</label>
+            <input type="text" id="ecole-nom" placeholder="Ex: Complexe Scolaire La Grâce" required />
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-user"></i> Responsable (Chef d'établissement)</label>
+            <input type="text" id="ecole-responsable" placeholder="Nom du responsable" />
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-graduation-cap"></i> Cycle</label>
+            <select id="ecole-cycle">
+              <option value="">Tous les cycles</option>
+              <option value="maternelle">Maternelle</option>
+              <option value="primaire">Primaire</option>
+              <option value="secondaire">Secondaire</option>
+            </select>
+            <small class="hint">Si laissé vide, l'école peut gérer tous les cycles</small>
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-building"></i> Catégorie</label>
+            <select id="ecole-categorie" required>
+              <option value="">Sélectionner une catégorie</option>
+              <option value="publique">Publique</option>
+              <option value="privee">Privée</option>
+            </select>
+            <small class="hint">Choisissez la catégorie de l'école</small>
+          </div>
+          <div class="form-field">
+            <label><i class="fas fa-envelope"></i> Email de connexion</label>
+            <input type="email" id="ecole-email" placeholder="email@exemple.com" required />
+            <small class="hint">Cet email servira d'identifiant de connexion</small>
+          </div>
+          <div class="form-field" id="field-password">
+            <label><i class="fas fa-key"></i> Mot de passe initial</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="ecole-password" placeholder="Mot de passe auto-généré" style="flex: 1;" />
+              <button type="button" class="btn btn-ghost" id="gen-pass-ecole" style="white-space: nowrap;"><i class="fas fa-rotate"></i> Générer</button>
+            </div>
+            <small class="hint">À transmettre au responsable de manière sécurisée</small>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-ghost" data-close-modal>Annuler</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirmation -->
+  <div class="modal" id="modal-confirm">
+    <div class="modal-card sm">
+      <div class="modal-head">
+        <h3 id="confirm-title"><i class="fas fa-circle-question"></i> Confirmation</h3>
+        <button class="icon-btn" data-close-modal><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message">Êtes-vous sûr ?</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" data-close-modal>Annuler</button>
+        <button class="btn btn-danger" id="confirm-ok">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"><i class="fas fa-circle-info"></i><span id="toast-msg"></span></div>
+
+  <!-- OVERLAY MOBILE -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- FIREBASE + JS -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="../static/firebase-config.js"></script>
+  <script src="../static/dashboard-sous-division-v2.js"></script>
+</body>
+</html>

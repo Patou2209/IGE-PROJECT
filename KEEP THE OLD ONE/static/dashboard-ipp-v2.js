@@ -688,7 +688,7 @@
 
     // En-tête officiel
     html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #2563eb;">';
-    html += '  <img src="../img/logo min backless.png" alt="RDC Ministère" style="height:120px;object-fit:contain;" />';
+    html += '  <img src="../img/logo min backless.png" alt="RDC Ministère" style="height:80px;object-fit:contain;" />';
     html += '  <div style="text-align:center;flex:1;padding:0 20px;">';
     html += '    <div style="font-size:11px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:0.5px;">REPUBLIQUE DEMOCRATIQUE DU CONGO</div>';
     html += '    <div style="font-size:10px;color:#374151;margin-top:2px;">MINISTERE DE L\'EDUCATION NATIONALE ET NOUVELLE CITOYENNETE</div>';
