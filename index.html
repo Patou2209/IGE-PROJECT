@@ -5,27 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link href="static/style.css" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --green-bright: #22e000;
-      --green-mid: #1ab800;
-      --green-dark: #0b5200;
-      --green-deep: #062800;
-      --glass-bg: rgba(30, 90, 20, 0.18);
-      --glass-border: rgba(100, 220, 60, 0.25);
+      /* Palette professionnelle claire (blanc dominant + accents discrets) */
+      --accent: #2563eb;          /* bleu professionnel pour focus / liens */
+      --accent-soft: #3b82f6;
+      --accent-deep: #1e40af;
+      --surface: #ffffff;
+      --surface-2: #f6f8fb;
+      --surface-3: #eef2f7;
+      --border: rgba(15, 23, 42, 0.10);
+      --border-strong: rgba(15, 23, 42, 0.18);
+      --text: #0f172a;             /* slate-900 */
+      --text-soft: #334155;        /* slate-700 */
+      --text-dim: #64748b;         /* slate-500 */
+      --glass-bg: rgba(255, 255, 255, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.7);
       --glass-blur: 22px;
       --white: #ffffff;
-      --text-light: rgba(255,255,255,0.85);
-      --text-dim: rgba(255,255,255,0.5);
+      --text-light: rgba(15,23,42,0.85);
     }
 
     html, body {
       width: 100%; height: 100%;
       font-family: 'DM Sans', sans-serif;
-      background: #061a02;
+      background: #f4f6fb;
+      color: var(--text);
       overflow: hidden;
     }
     .texte {
@@ -38,37 +47,41 @@
       align-items: center;
       cursor: pointer;
     }
+    .checkbox input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 14px; height: 14px;
+    }
 
-    /* ── BACKGROUND ── */
+    /* ── BACKGROUND (clair, professionnel) ── */
     .bg {
       position: fixed; inset: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 70% 60%, #1c8a00 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 20% 30%, #0d5500 0%, transparent 55%),
-        radial-gradient(ellipse 40% 40% at 85% 10%, #22e000 0%, transparent 45%),
-        #061a02;
+        radial-gradient(ellipse 80% 60% at 70% 60%, #e8efff 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 20% 30%, #eef2f9 0%, transparent 55%),
+        radial-gradient(ellipse 40% 40% at 85% 10%, #f5f7ff 0%, transparent 45%),
+        #ffffff;
       overflow: hidden;
     }
 
-    /* Animated blobs */
+    /* Animated blobs (très doux, presque transparents) */
     .blob {
       position: absolute;
       border-radius: 50%;
-      filter: blur(60px);
+      filter: blur(70px);
       opacity: 0.55;
       animation: floatBlob 8s ease-in-out infinite alternate;
     }
-    .blob-1 { width: 380px; height: 380px; background: #22e000; top: -80px; right: 10%; animation-duration: 9s; }
-    .blob-2 { width: 280px; height: 280px; background: #0fa000; bottom: 5%; left: 5%; animation-duration: 11s; animation-delay: -3s; }
-    .blob-3 { width: 200px; height: 200px; background: #44ff20; bottom: 20%; right: 20%; animation-duration: 7s; animation-delay: -1s; }
-    .blob-4 { width: 160px; height: 160px; background: #22e000; top: 40%; left: 30%; animation-duration: 13s; animation-delay: -5s; }
+    .blob-1 { width: 380px; height: 380px; background: #dbe4ff; top: -80px; right: 10%; animation-duration: 9s; }
+    .blob-2 { width: 280px; height: 280px; background: #e9eefc; bottom: 5%; left: 5%; animation-duration: 11s; animation-delay: -3s; }
+    .blob-3 { width: 200px; height: 200px; background: #eef1fa; bottom: 20%; right: 20%; animation-duration: 7s; animation-delay: -1s; }
+    .blob-4 { width: 160px; height: 160px; background: #e3ebff; top: 40%; left: 30%; animation-duration: 13s; animation-delay: -5s; }
 
     @keyframes floatBlob {
       from { transform: translate(0, 0) scale(1); }
       to   { transform: translate(30px, -25px) scale(1.12); }
     }
 
-    /* 3D ribbon / wave shape (CSS-only) */
+    /* 3D ribbon / wave shape — version claire et discrète */
     .ribbon {
       position: absolute;
       width: 120%;
@@ -78,11 +91,11 @@
       background: conic-gradient(
         from 30deg at 60% 55%,
         transparent 0deg,
-        rgba(34,224,0,0.08) 40deg,
+        rgba(37, 99, 235, 0.04) 40deg,
         transparent 80deg,
-        rgba(34,224,0,0.12) 150deg,
+        rgba(37, 99, 235, 0.06) 150deg,
         transparent 200deg,
-        rgba(34,224,0,0.06) 280deg,
+        rgba(37, 99, 235, 0.03) 280deg,
         transparent 360deg
       );
       transform: rotate(-15deg);
@@ -93,24 +106,26 @@
       to { transform: rotate(345deg); }
     }
 
-    /* Diagonal stripes */
+    /* Diagonal stripes — gris très clair */
     .stripes {
       position: absolute; inset: 0;
       background: repeating-linear-gradient(
         -45deg,
         transparent,
         transparent 60px,
-        rgba(34,224,0,0.03) 60px,
-        rgba(34,224,0,0.03) 62px
+        rgba(15, 23, 42, 0.025) 60px,
+        rgba(15, 23, 42, 0.025) 62px
       );
     }
 
-    /* Decorative orbs */
+    /* Decorative orbs — gris perle / bleu très doux */
     .orb {
       position: absolute;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #55ff30, #0c6200);
-      box-shadow: 0 0 30px rgba(34,224,0,0.4), inset 0 0 20px rgba(0,0,0,0.3);
+      background: radial-gradient(circle at 35% 35%, #ffffff, #d8e0f0);
+      box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.08),
+        inset 0 0 20px rgba(255, 255, 255, 0.6);
       animation: floatOrb 6s ease-in-out infinite alternate;
     }
     .orb-1 { width: 55px; height: 55px; top: 15%; left: 12%; animation-duration: 7s; }
@@ -118,13 +133,13 @@
     .orb-3 { width: 20px; height: 20px; top: 75%; right: 15%; animation-duration: 9s; animation-delay:-4s; }
     .orb-4 { width: 14px; height: 14px; top: 30%; right: 8%; animation-duration: 6s; animation-delay:-1s; }
 
-    /* Pills */
+    /* Pills — gradient bleu pâle, élégant */
     .pill {
       position: absolute;
       border-radius: 999px;
-      background: linear-gradient(135deg, #22e000, #0a7a00);
-      box-shadow: 0 8px 40px rgba(34,224,0,0.3);
-      opacity: 0.7;
+      background: linear-gradient(135deg, #e6ecfb, #c9d4ef);
+      box-shadow: 0 8px 30px rgba(37, 99, 235, 0.12);
+      opacity: 0.75;
       animation: floatOrb 10s ease-in-out infinite alternate;
     }
     .pill-1 { width: 14px; height: 90px; top: 10%; right: 30%; transform: rotate(-45deg); animation-delay:-3s; }
@@ -144,21 +159,20 @@
       justify-content: center;
     }
 
-    /* ── GLASS CARD ── */
+    /* ── GLASS CARD (blanc, propre, premium) ── */
     .card {
       position: relative;
       width: 380px;
       padding: 40px 36px 36px;
-      background: rgba(18, 70, 8, 0.22);
-      backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-      border: 1px solid rgba(100,220,60,0.22);
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+      border: 1px solid rgba(15, 23, 42, 0.08);
       border-radius: 20px;
       box-shadow:
-        0 8px 60px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(200,255,140,0.15),
-        inset 0 -1px 0 rgba(0,0,0,0.2),
-        0 0 0 0.5px rgba(34,224,0,0.1);
+        0 20px 60px rgba(15, 23, 42, 0.10),
+        0 4px 16px rgba(15, 23, 42, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
       animation: cardIn 0.9s cubic-bezier(0.22,1,0.36,1) both;
     }
 
@@ -167,7 +181,7 @@
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* Frosted glass inner highlight */
+    /* Frosted glass inner highlight (subtil) */
     .card::before {
       content: '';
       position: absolute;
@@ -175,9 +189,9 @@
       border-radius: 20px;
       background: linear-gradient(
         135deg,
-        rgba(200,255,140,0.08) 0%,
+        rgba(255, 255, 255, 0.6) 0%,
         transparent 50%,
-        rgba(0,80,0,0.1) 100%
+        rgba(15, 23, 42, 0.02) 100%
       );
       pointer-events: none;
     }
@@ -191,10 +205,10 @@
       transform: translateX(-50%);
       width: 80px;
       height: 10px;
-      background: rgba(14,60,5,0.7);
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 0 0 12px 12px;
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(100,220,60,0.15);
+      border: 1px solid rgba(15, 23, 42, 0.08);
       border-top: none;
     }
 
@@ -207,7 +221,7 @@
       font-family: 'Syne', sans-serif;
       font-size: 26px;
       font-weight: 700;
-      color: var(--white);
+      color: var(--text);
       letter-spacing: -0.5px;
       margin-bottom: 4px;
     }
@@ -231,20 +245,22 @@
       justify-content: center;
       gap: 7px;
       padding: 10px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: #ffffff;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      color: var(--white);
+      color: var(--text);
       font-family: 'DM Sans', sans-serif;
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
     .btn-social:hover {
-      background: rgba(255,255,255,0.13);
-      border-color: rgba(100,220,60,0.35);
+      background: var(--surface-2);
+      border-color: var(--border-strong);
       transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     }
     .btn-social svg { flex-shrink: 0; }
 
@@ -260,12 +276,13 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: rgba(255,255,255,0.12);
+      background: var(--border);
     }
     .divider span {
       font-size: 11px;
       color: var(--text-dim);
       letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     /* ── FORM ── */
@@ -277,35 +294,45 @@
     .field label {
       display: block;
       font-size: 11px;
-      color: var(--text-dim);
+      color: var(--text-soft);
       margin-bottom: 6px;
       letter-spacing: 0.3px;
+      font-weight: 500;
     }
     .input-wrap {
       position: relative;
     }
-    .auth-message.error { background: var(--c-danger-50); color: #b91c1c; border: 1px solid #fca5a5; }
-    .auth-message.success { background: var(--c-success-50); color: #065f46; border: 1px solid #86efac; }
-    .auth-message.info { background: var(--c-primary-50); color: var(--c-primary-800); border: 1px solid #a7f3d0; }
-   
+
+    /* Messages d'authentification */
+    .auth-message {
+      margin: 6px 0 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .auth-message.hidden { display: none; }
+    .auth-message.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .auth-message.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .auth-message.info    { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
 
     .field input {
       width: 100%;
       padding: 11px 14px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: #ffffff;
+      border: 1px solid var(--border);
       border-radius: 10px;
-      color: var(--white);
+      color: var(--text);
       font-family: 'DM Sans', sans-serif;
       font-size: 13px;
       outline: none;
       transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
     }
-    .field input::placeholder { color: rgba(255,255,255,0.28); }
+    .field input::placeholder { color: #94a3b8; }
     .field input:focus {
-      border-color: rgba(34,224,0,0.5);
-      background: rgba(255,255,255,0.1);
-      box-shadow: 0 0 0 3px rgba(34,224,0,0.1);
+      border-color: var(--accent);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
     }
     .eye-btn {
       position: absolute;
@@ -316,14 +343,14 @@
       color: var(--text-dim);
       transition: color 0.2s;
     }
-    .eye-btn:hover { color: var(--green-bright); }
+    .eye-btn:hover { color: var(--accent); }
 
     /* ── LOGIN BUTTON ── */
     .btn-login {
       width: 100%;
       padding: 13px;
       margin-top: 8px;
-      background: linear-gradient(135deg, #22e000 0%, #0fa000 100%);
+      background: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
       border: none;
       border-radius: 10px;
       color: #fff;
@@ -334,19 +361,24 @@
       cursor: pointer;
       position: relative;
       overflow: hidden;
-      transition: transform 0.18s, box-shadow 0.18s;
-      box-shadow: 0 4px 24px rgba(34,224,0,0.35), 0 0 0 1px rgba(255,255,255,0.08);
+      transition: transform 0.18s, box-shadow 0.18s, background 0.25s;
+      box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.18),
+        0 0 0 1px rgba(15, 23, 42, 0.06);
     }
     .btn-login::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
       pointer-events: none;
     }
     .btn-login:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 36px rgba(34,224,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+      background: linear-gradient(135deg, #111827 0%, #020617 100%);
+      box-shadow:
+        0 12px 32px rgba(15, 23, 42, 0.25),
+        0 0 0 1px rgba(15, 23, 42, 0.1);
     }
     .btn-login:active { transform: translateY(0); }
 
@@ -356,6 +388,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       animation: fadeUp 0.9s 0.4s both;
     }
     .card-footer a {
@@ -364,50 +397,59 @@
       text-decoration: none;
       transition: color 0.2s;
     }
-    .card-footer a:hover { color: var(--green-bright); }
+    .card-footer a:hover { color: var(--accent); }
     .card-footer .signup {
       font-size: 12px;
       color: var(--text-dim);
     }
     .card-footer .signup a {
-      color: var(--green-bright);
+      color: var(--accent);
       font-weight: 600;
+    }
+    .link-muted {
+      color: var(--text-dim);
     }
 
     /* ── BOTTOM LABEL ── */
     .bottom-label {
       position: absolute;
-      bottom: -18px;
+      bottom: -22px;
       left: 0; right: 0;
       text-align: center;
       font-size: 10px;
-      color: rgba(255,255,255,0.2);
-      letter-spacing: 1px;
+      color: rgba(15, 23, 42, 0.35);
+      letter-spacing: 1.5px;
       text-transform: uppercase;
+      font-weight: 500;
     }
 
-    /* ── PLAYER CONTROLS (prototype detail) ── */
+    /* ── PLAYER CONTROLS (info row) ── */
     .player-row {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-top: 16px;
       padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,0.08);
+      border-top: 1px solid var(--border);
       animation: fadeUp 0.9s 0.45s both;
     }
     .see-more-btn {
-      padding: 7px 14px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.15);
+      width: 100%;
+      padding: 9px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
       border-radius: 20px;
-      color: var(--white);
+      color: var(--text-soft);
       font-family: 'DM Sans', sans-serif;
       font-size: 11px;
-      cursor: pointer;
+      cursor: default;
       transition: background 0.2s;
+      text-align: center;
     }
-    .see-more-btn:hover { background: rgba(255,255,255,0.18); }
+    .see-more-btn p { display: flex; align-items: center; gap: 6px; justify-content: center; }
+    .see-more-btn i { color: var(--accent); }
+    .see-more-btn:hover { background: var(--surface-3); }
+
     .play-controls {
       display: flex;
       align-items: center;
@@ -416,18 +458,23 @@
     .play-controls span {
       width: 26px; height: 26px;
       border-radius: 50%;
-      background: rgba(34,224,0,0.2);
-      border: 1px solid rgba(34,224,0,0.3);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       transition: background 0.2s;
     }
-    .play-controls span:hover { background: rgba(34,224,0,0.35); }
-    .play-controls svg { width: 10px; height: 10px; fill: #22e000; }
+    .play-controls span:hover { background: var(--surface-3); }
+    .play-controls svg { width: 10px; height: 10px; fill: var(--accent); }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 420px) {
+      .card { width: calc(100% - 24px); padding: 32px 24px 28px; }
     }
   </style>
 </head>
@@ -456,18 +503,19 @@
 
     <div class="card-header">
       <h1>Connectez-vous</h1>
+      <p>Accédez à votre espace professionnel en toute sécurité.</p>
     </div>
 
     <!-- Social -->
     <div class="social-row">
-      <button class="btn-social">
+      <button class="btn-social" type="button">
         <!-- Google icon -->
         <svg width="16" height="16" viewBox="0 0 18 18"><path fill="#EA4335" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#4285F4" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#34A853" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
         Google
       </button>
-      <button class="btn-social">
+      <button class="btn-social" type="button">
         <!-- Apple icon -->
-        <svg width="14" height="16" viewBox="0 0 14 17" fill="white"><path d="M13.067 12.35c-.245.545-.535 1.046-.873 1.507-.46.621-.836 1.051-1.125 1.29-.449.413-.93.624-1.447.636-.37 0-.817-.105-1.337-.32-.523-.215-.999-.32-1.434-.32-.456 0-.945.105-1.47.32-.525.215-.947.327-1.271.338-.497.021-.988-.196-1.474-.65-.313-.256-.706-.7-1.18-1.336C.882 13.15.531 12.43.266 11.592.001 10.69-.1 9.815-.1 8.964c0-.979.211-1.823.636-2.526a3.724 3.724 0 0 1 1.325-1.35 3.565 3.565 0 0 1 1.79-.51c.371 0 .858.115 1.462.342.602.228.989.343 1.157.343.127 0 .558-.135 1.288-.403.69-.25 1.272-.353 1.75-.314 1.294.104 2.265.614 2.907 1.534-1.158.7-1.73 1.68-1.719 2.937.01 .978.365 1.793 1.063 2.437a3.5 3.5 0 0 0 1.063.696 28.55 28.55 0 0 1-.34.94zM9.97.34c0 .767-.28 1.483-.836 2.143-.671.786-1.482 1.24-2.36 1.169a2.37 2.37 0 0 1-.018-.29c0-.736.32-1.524.888-2.168A3.485 3.485 0 0 1 9.168.15a3.54 3.54 0 0 1 .787-.15c.011.114.016.228.016.34z"/></svg>
+        <svg width="14" height="16" viewBox="0 0 14 17" fill="#0f172a"><path d="M13.067 12.35c-.245.545-.535 1.046-.873 1.507-.46.621-.836 1.051-1.125 1.29-.449.413-.93.624-1.447.636-.37 0-.817-.105-1.337-.32-.523-.215-.999-.32-1.434-.32-.456 0-.945.105-1.47.32-.525.215-.947.327-1.271.338-.497.021-.988-.196-1.474-.65-.313-.256-.706-.7-1.18-1.336C.882 13.15.531 12.43.266 11.592.001 10.69-.1 9.815-.1 8.964c0-.979.211-1.823.636-2.526a3.724 3.724 0 0 1 1.325-1.35 3.565 3.565 0 0 1 1.79-.51c.371 0 .858.115 1.462.342.602.228.989.343 1.157.343.127 0 .558-.135 1.288-.403.69-.25 1.272-.353 1.75-.314 1.294.104 2.265.614 2.907 1.534-1.158.7-1.73 1.68-1.719 2.937.01 .978.365 1.793 1.063 2.437a3.5 3.5 0 0 0 1.063.696 28.55 28.55 0 0 1-.34.94zM9.97.34c0 .767-.28 1.483-.836 2.143-.671.786-1.482 1.24-2.36 1.169a2.37 2.37 0 0 1-.018-.29c0-.736.32-1.524.888-2.168A3.485 3.485 0 0 1 9.168.15a3.54 3.54 0 0 1 .787-.15c.011.114.016.228.016.34z"/></svg>
         Apple
       </button>
     </div>
@@ -477,14 +525,14 @@
     <!-- Form -->
     <div id="login-form" class="form" autocomplete="on">
       <div class="field">
-        <label>Email</label>
-        <input type="email"id="email" name="email" placeholder="Entrez votre email" />
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Entrez votre email" />
       </div>
       <div class="field">
-        <label>Password</label>
+        <label for="password">Mot de passe</label>
         <div class="input-wrap">
-          <input type="password" id="password" name="password" placeholder="Entrez votre mot de passe" id="pwdInput"/>
-          <button class="eye-btn" onclick="togglePwd()" type="button" aria-label="Toggle password">
+          <input type="password" id="password" name="password" placeholder="Entrez votre mot de passe" />
+          <button class="eye-btn" onclick="togglePwd()" type="button" aria-label="Afficher / masquer le mot de passe">
             <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
               <circle cx="12" cy="12" r="3"/>
@@ -501,15 +549,17 @@
     <!-- Footer links -->
     <div class="card-footer">
       <label class="checkbox">
-                <input type="checkbox" id="remember" />
-                <p class="texte">Se souvenir de moi</p>
-              </label>
-      <a href="#" class="link-muted" onclick="alert('En cas de perte de vos Identifiants, veillez contactez votre hierarchie directe pour vous en fournir d\'autres!')">Mot de passe oublié ?</a>
+        <input type="checkbox" id="remember" />
+        <p class="texte">Se souvenir de moi</p>
+      </label>
+      <a href="#" class="link-muted" onclick="alert('En cas de perte de vos identifiants, veuillez contacter votre hiérarchie directe pour vous en fournir d\'autres !'); return false;">Mot de passe oublié ?</a>
     </div>
 
-    <!-- Player row (prototype detail) -->
+    <!-- Player row (info note) -->
     <div class="player-row">
-      <button class="see-more-btn"><p><i class="fas fa-circle-info"></i> Les identifiants sont attribués par votre niveau supérieur.</p></button>
+      <button class="see-more-btn" type="button">
+        <p><i class="fas fa-circle-info"></i> Les identifiants sont attribués par votre niveau supérieur.</p>
+      </button>
     </div>
 
     <div class="bottom-label">TECHNOWEB CORPORATION</div>
@@ -518,16 +568,18 @@
 
 <script>
   function togglePwd() {
-    const i = document.getElementById('pwdInput');
+    const i = document.getElementById('password');
+    if (!i) return;
     i.type = i.type === 'password' ? 'text' : 'password';
   }
 </script>
+
 <!-- Firebase SDK (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-  <script src="static/firebase-config.js"></script>
-  <script src="static/main.js"></script>
-  <script src="static/login.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="static/firebase-config.js"></script>
+<script src="static/main.js"></script>
+<script src="static/login.js"></script>
 </body>
 </html>
